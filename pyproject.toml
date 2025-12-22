@@ -25,19 +25,19 @@ classifiers = [
   "License :: OSI Approved :: MIT License",
 ]
 
-[project.urls]
-Homepage = "https://exodialabs.xyz"
-Repository = "https://github.com/exodialabsxyz/exodus"
-"Bug Tracker" = "https://github.com/exodialabsxyz/exodus/issues"
-
 dependencies = [
   "httpx==0.28.1",
   "litellm==1.80.10",
   "pydantic==2.12.5"
 ]
 
+[project.urls]
+Homepage = "https://exodialabs.xyz"
+Repository = "https://github.com/exodialabsxyz/exodus"
+"Bug Tracker" = "https://github.com/exodialabsxyz/exodus/issues"
+
 [project.scripts]
-exodia-cli = "exodus.cli.app:main"
+exodus-cli = "exodus.cli.app:main"
 
 [project.optional-dependencies]
 dev = [

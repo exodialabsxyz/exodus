@@ -92,23 +92,23 @@ pip install -e .
 
 ```bash
 # Start with default agent
-exodus chat
+exodus-cli chat
 
 # Start with a specific agent
-exodus chat --agent triage_agent
+exodus-cli chat --agent triage_agent
 
 # Use a different model
-exodus chat --model "gemini/gemini-2.5-pro"
+exodus-cli chat --model "gemini/gemini-2.5-pro"
 
 # Adjust temperature
-exodus chat --temperature 0.7
+exodus-cli chat --temperature 0.7
 ```
 
 ### Example Usage
 
 ```bash
 # Start with the triage agent for automatic task routing
-exodus chat --agent triage_agent
+exodus-cli chat --agent triage_agent
 
 > "Scan 192.168.1.1 for open ports and services"
 # triage_agent will automatically transfer to recon_agent

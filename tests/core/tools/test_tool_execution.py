@@ -38,6 +38,9 @@ class TestToolExecution:
 
     @pytest.mark.asyncio
     async def test_python_tool_execution(self, tool_executor):
+        if tool_executor.execution_mode != "local":
+            pytest.skip("Skipping python tool test for non-local execution mode")
+
         # 1. Register tool
         tool_registry.register_tool("calculator", add)
         
@@ -60,6 +63,9 @@ class TestToolExecution:
 
     @pytest.mark.asyncio
     async def test_async_python_tool(self, tool_executor):
+        if tool_executor.execution_mode != "local":
+            pytest.skip("Skipping python tool test for non-local execution mode")
+
         tool_registry.register_tool("async_reverse", async_reverse)
         
         result = await tool_executor.execute("async_reverse", {"text": "exodia"})
@@ -121,6 +127,9 @@ class TestToolExecution:
         parses it using the dynamic Pydantic model, 
         and executes the tool.
         """
+        if tool_executor.execution_mode != "local":
+            pytest.skip("Skipping python tool test for non-local execution mode")
+
         # 1. Define and register a tool
         @tool(name="weather_tool", type="python", description="Get weather")
         def get_weather(location: str, unit: str = "celsius") -> str:

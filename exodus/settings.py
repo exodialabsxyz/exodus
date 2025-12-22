@@ -8,7 +8,12 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-SETTINGS_FILE = BASE_DIR / "settings.toml"
+
+### Priority: CWD > Package Root (for dev/editable installs)
+CWD_SETTINGS = Path.cwd() / "settings.toml"
+PACKAGE_SETTINGS = BASE_DIR / "settings.toml"
+
+SETTINGS_FILE = CWD_SETTINGS if CWD_SETTINGS.exists() else PACKAGE_SETTINGS
 
 class Settings:
     _instance = None

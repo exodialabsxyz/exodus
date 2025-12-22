@@ -43,6 +43,8 @@ class DockerExecutorDriver(ToolExecutionDriver):
                 logger.info(f"Executing command '{command}' in Docker container '{self.default_image_name}'")
                 result = container.exec_run(command, stdout=True, stderr=True)
                 return result.output.decode('utf-8').strip()
+            elif tool_type == "python":
+                logger.error(f"Python tools are not supported in Docker executor")
             else:
                 logger.error(f"Unsupported tool type: {tool_type}")
                 
