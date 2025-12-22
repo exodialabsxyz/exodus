@@ -1,0 +1,27 @@
+[llm]
+default_model = "gemini/gemini-2.5-flash"
+default_provider = "litellm"
+default_temperature = 1
+default_max_tokens = 100000
+custom_api_base=""
+
+[llm.default_provider_config]
+api_key = "AIzaSyD0Zu6YJBq4yDFyD6YJYJYJYJYJYJYJYJY"
+
+[agent]
+default_agent = "triage_agent"
+max_iterations = 10
+execution_mode = "local"
+
+[agent.execution.docker]
+default_image = "parrotsec/security:7.0"
+default_image_name = "parrot_exodus"
+
+[agent.memory.local]
+type = "json"
+workspace = ""
+
+[logging]
+level = "DEBUG"
+format = "[exodus] %(asctime)s - %(name)s - %(levelname)s - %(message)s"
+

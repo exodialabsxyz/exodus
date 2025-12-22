@@ -1,0 +1,62 @@
+[build-system]
+requires = ["setuptools>=80.9.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "exodia"
+version = "2025.12.15"
+description = "Lightweight, modular cybersecurity framework for AI-powered security"
+authors = [
+  {name = "AGP (Alejandro García Peláez)"}
+]
+maintainers = [
+  {name = "Exodialabs", email = "contact@exodialabs.xyz"}
+]
+license = {text = "MIT"}
+requires-python = ">= 3.11"
+readme = "README.md"
+keywords = ["cybersecurity", "pentesting", "ai", "agents", "security-testing"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Information Technology",
+  "Topic :: Security",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "License :: OSI Approved :: MIT License",
+]
+
+[project.urls]
+Homepage = "https://exodialabs.xyz"
+Repository = "https://github.com/exodialabsxyz/exodus"
+"Bug Tracker" = "https://github.com/exodialabsxyz/exodus/issues"
+
+dependencies = [
+  "httpx==0.28.1",
+  "litellm==1.80.10",
+  "pydantic==2.12.5"
+]
+
+[project.scripts]
+exodia-cli = "exodus.cli.app:main"
+
+[project.optional-dependencies]
+dev = [
+  "pytest==9.0.2",
+  "pytest-asyncio==1.3.0"
+]
+
+cli = [
+  "typer==0.20.0",
+  "rich==14.2.0"
+]
+
+docker = [
+  "docker==7.1.0"
+]
+
+[project.entry-points."exodus.plugins.tools"]
+core = "exodus.core.tools.plugin:CorePlugin"
+
+[tool.setuptools.packages.find]
+include = ["exodus*"]
+exclude = ["logs*", "tests*"]
