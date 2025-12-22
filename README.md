@@ -41,7 +41,7 @@ Key Features:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/exodus.git
+git clone https://github.com/exodialabsxyz/exodus.git
 cd exodus
 
 # Install EXODUS
