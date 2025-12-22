@@ -9,6 +9,15 @@ Key Features:
 + Multi-agent swarm architecture: from individual agents to specialized teams with different patterns (central orchestrator, agent delegation, etc.)
 + Lightweight implementation: avoids heavy agent libraries and uses only what is strictly necessary.
 
+---
+
+<div align="center">
+<img src="docs/readme_screenshot.png" alt="EXODUS CLI - Agent Handoffs in Action" width="800"/>
+*Triage agent routing requests to specialized agents with seamless handoffs*
+</div>
+
+---
+
 ## 📋 Table of Contents
 
 - [Installation & Setup](#-installation--setup)
@@ -50,7 +59,7 @@ pip install -e .
    Edit `settings.toml` and add your API key:
    ```toml
    [llm]
-   default_model = "gemini/gemini-2.0-flash-exp"
+   default_model = "gemini/gemini-2.5-flash"
    default_provider = "litellm"
    custom_api_base = ""  # Optional: for local models or custom endpoints
    
@@ -61,7 +70,7 @@ pip install -e .
 3. **Configure execution mode:**
    ```toml
    [agent]
-   default_agent = "chat_agent"
+   default_agent = "triage_agent"
    max_iterations = 100
    execution_mode = "local"  # or "docker"
    
@@ -89,7 +98,7 @@ exodus chat
 exodus chat --agent triage_agent
 
 # Use a different model
-exodus chat --model "gemini/gemini-2.0-flash-exp"
+exodus chat --model "gemini/gemini-2.5-pro"
 
 # Adjust temperature
 exodus chat --temperature 0.7
@@ -110,11 +119,11 @@ exodus chat --agent triage_agent
 
 ```toml
 [llm]
-default_model = "ollama/llama3.2"
+default_model = "ollama/granite4:latest"
 custom_api_base = "http://localhost:11434"
 
 [llm.default_provider_config]
-api_key = "ollama"
+api_key = "ollama_apikey"
 ```
 
 ## 🔧 Creating Custom Plugins
@@ -172,7 +181,7 @@ handoffs = ["web_expert", "network_expert"]  # Agents this agent can delegate to
 max_iterations = 50
 
 [agent.llm]
-model = "gemini/gemini-2.0-flash-exp"
+model = "gemini/gemini-2.5-pro"
 temperature = 0.7
 ```
 
@@ -290,7 +299,7 @@ Thanks to LiteLLM integration, EXODUS supports 100+ LLM providers:
 - **Google**: `gemini/gemini-2.0-flash-exp`, `gemini/gemini-pro`
 - **OpenAI**: `gpt-4`, `gpt-3.5-turbo`, `gpt-4-turbo`
 - **Anthropic**: `claude-3-opus`, `claude-3-sonnet`
-- **Ollama**: `ollama/llama3.2`, `ollama/mistral`, `ollama/codellama`
+- **Ollama**: `ollama/llama3.2`, `ollama/mistral`, `ollama/qwen3:latest`
 - **DeepSeek**: `deepseek/deepseek-chat`, `deepseek/deepseek-coder`
 - **And many more**: Groq, Cohere, Replicate, Together AI, etc.
 
