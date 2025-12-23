@@ -1,6 +1,8 @@
-from typing import Dict, Optional, Union
 from pathlib import Path
+from typing import Dict, Optional, Union
+
 from exodus.core.models.agent import AgentDefinition
+
 
 class AgentRegistry:
     def __init__(self):
@@ -16,12 +18,12 @@ class AgentRegistry:
             path = parent_dir / "agents" / "single"
         else:
             path = Path(path) if isinstance(path, str) else path
-        
+
         for file in path.glob("*.toml"):
             agent_definition = AgentDefinition.from_toml(file)
             self.register_agent(agent_definition)
 
     def get_agent(self, agent_name: str) -> AgentDefinition:
-        if not agent_name in self._agents:
+        if agent_name not in self._agents:
             raise ValueError(f"Agent {agent_name} not found")
         return self._agents[agent_name]

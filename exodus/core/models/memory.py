@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
-from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 from exodus.logs import logger
+
 
 @dataclass
 class Message:
@@ -21,10 +22,7 @@ class Message:
     agent_name: Optional[str] = None
 
     def to_openai_format(self) -> Dict[str, Any]:
-        payload = {
-            "role": self.role,
-            "content": self.content
-        }
+        payload = {"role": self.role, "content": self.content}
 
         if self.tool_calls is not None:
             payload["tool_calls"] = self.tool_calls
@@ -38,7 +36,7 @@ class Message:
         return payload
 
     def to_dict(self) -> Dict[str, Any]:
-        result =  {
+        result = {
             "role": self.role,
             "content": self.content,
             "timestamp": self.timestamp.isoformat(),
@@ -51,19 +49,25 @@ class Message:
             try:
                 tool_calls_list = []
                 for tc in self.tool_calls:
-                    if hasattr(tc, 'model_dump'):
-                        tool_calls_list.append(tc.model_dump(mode='json'))
-                    elif hasattr(tc, 'dict'):
+                    if hasattr(tc, "model_dump"):
+                        tool_calls_list.append(tc.model_dump(mode="json"))
+                    elif hasattr(tc, "dict"):
                         tool_calls_list.append(tc.dict())
                     else:
-                        tool_calls_list.append({
-                            'id': getattr(tc, 'id', None),
-                            'type': getattr(tc, 'type', 'function'),
-                            'function': {
-                                'name': getattr(tc.function, 'name', None) if hasattr(tc, 'function') else None,
-                                'arguments': getattr(tc.function, 'arguments', None) if hasattr(tc, 'function') else None
+                        tool_calls_list.append(
+                            {
+                                "id": getattr(tc, "id", None),
+                                "type": getattr(tc, "type", "function"),
+                                "function": {
+                                    "name": getattr(tc.function, "name", None)
+                                    if hasattr(tc, "function")
+                                    else None,
+                                    "arguments": getattr(tc.function, "arguments", None)
+                                    if hasattr(tc, "function")
+                                    else None,
+                                },
                             }
-                        })
+                        )
                 result["tool_calls"] = tool_calls_list
             except Exception as e:
                 result["tool_calls"] = []
@@ -75,6 +79,7 @@ class Message:
             result["name"] = self.name
 
         return result
+
 
 class MemoryManager(ABC):
     def __init__(self):

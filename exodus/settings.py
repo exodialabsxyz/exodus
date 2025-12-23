@@ -1,11 +1,10 @@
-import os
 try:
     import tomllib
 except ImportError:
     # Fallback for older python versions if needed, though project requires >= 3.11
     import tomli as tomllib
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -14,6 +13,7 @@ CWD_SETTINGS = Path.cwd() / "settings.toml"
 PACKAGE_SETTINGS = BASE_DIR / "settings.toml"
 
 SETTINGS_FILE = CWD_SETTINGS if CWD_SETTINGS.exists() else PACKAGE_SETTINGS
+
 
 class Settings:
     _instance = None
@@ -35,7 +35,7 @@ class Settings:
                     self._config = {}
         else:
             self._config = {}
-        
+
         # Here we could override with environment variables if needed
         # self._override_from_env()
 
@@ -52,5 +52,6 @@ class Settings:
 
     def __getitem__(self, item):
         return self.get(item)
+
 
 settings = Settings()

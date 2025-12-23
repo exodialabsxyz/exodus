@@ -1,7 +1,9 @@
 import asyncio
 from typing import Callable
+
 from exodus.core.models.tool import ToolExecutionDriver
 from exodus.logs import logger
+
 
 class LocalExecutorDriver(ToolExecutionDriver):
     async def execute(self, tool_type: str, tool_function: Callable, **tool_args) -> str:
@@ -10,20 +12,18 @@ class LocalExecutorDriver(ToolExecutionDriver):
                 command = tool_function(**tool_args)
                 if not isinstance(command, str):
                     raise ValueError(f"CLI tool must return a string command, got {type(command)}")
-                
+
                 logger.debug(f"Executing CLI command: {command}")
                 proc = await asyncio.create_subprocess_shell(
-                    command,
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE
+                    command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
                 )
                 stdout, stderr = await proc.communicate()
-                
+
                 if proc.returncode != 0:
                     error_msg = stderr.decode().strip()
                     logger.error(f"CLI tool execution failed: {error_msg}")
                     return f"Error: {error_msg}"
-                
+
                 result = stdout.decode().strip()
                 logger.debug(f"CLI tool execution result: {result}")
                 return result
@@ -33,7 +33,7 @@ class LocalExecutorDriver(ToolExecutionDriver):
                     return await tool_function(**tool_args)
                 else:
                     return tool_function(**tool_args)
-            
+
             else:
                 return f"Error: Unsupported tool type '{tool_type}'"
 

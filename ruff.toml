@@ -1,0 +1,9 @@
+line-length = 100
+indent-width = 4
+
+[lint]
+extend-select = ["I"]
+
+[format]
+indent-style = "space"
+docstring-code-format = true

@@ -1,9 +1,11 @@
 from typing import Callable
-from exodus.core.models.tool import ToolExecutionDriver
+
 import docker
 
-from exodus.settings import settings
+from exodus.core.models.tool import ToolExecutionDriver
 from exodus.logs import logger
+from exodus.settings import settings
+
 
 class DockerExecutorDriver(ToolExecutionDriver):
     def __init__(self):
@@ -22,32 +24,38 @@ class DockerExecutorDriver(ToolExecutionDriver):
                 try:
                     container = self.docker_client.containers.get(self.default_image_name)
                 except docker.errors.NotFound:
-                    logger.warning(f"Docker container '{self.default_image_name}' not found, starting it")
+                    logger.warning(
+                        f"Docker container '{self.default_image_name}' not found, starting it"
+                    )
                     container = self.docker_client.containers.run(
                         image=self.default_image,
                         name=self.default_image_name,
                         detach=True,
                         tty=True,
                         command="/bin/bash",
-                        stdin_open=True
+                        stdin_open=True,
                     )
                 except Exception as e:
                     logger.error(f"Error getting Docker container '{self.default_image_name}': {e}")
                     return f"Failed to execute tool: {str(e)}"
 
                 if container.status != "running":
-                    logger.warning(f"Docker container '{self.default_image_name}' is not running, starting it")
+                    logger.warning(
+                        f"Docker container '{self.default_image_name}' is not running, starting it"
+                    )
                     container.start()
 
                 ### Then execute the command
-                logger.info(f"Executing command '{command}' in Docker container '{self.default_image_name}'")
+                logger.info(
+                    f"Executing command '{command}' in Docker container '{self.default_image_name}'"
+                )
                 result = container.exec_run(command, stdout=True, stderr=True)
-                return result.output.decode('utf-8').strip()
+                return result.output.decode("utf-8").strip()
             elif tool_type == "python":
-                logger.error(f"Python tools are not supported in Docker executor")
+                logger.error("Python tools are not supported in Docker executor")
             else:
                 logger.error(f"Unsupported tool type: {tool_type}")
-                
+
         except Exception as e:
             logger.error(f"Docker execution error: {e}")
             return f"Failed to execute tool: {str(e)}"

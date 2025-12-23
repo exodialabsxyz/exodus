@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import Callable, Any
+from typing import Any, Callable
+
 
 class ToolExecutionDriver(ABC):
     @abstractmethod

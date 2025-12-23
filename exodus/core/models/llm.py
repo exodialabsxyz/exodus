@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Optional, TypeVar, Generic, List, AsyncIterator, Any, Dict
+from typing import Any, AsyncIterator, Dict, Generic, List, Optional, TypeVar
+
 
 @dataclass
 class LLMConfig:
@@ -11,12 +12,14 @@ class LLMConfig:
     temperature: float = 0.7
     custom_api_base: Optional[str] = None
 
-T = TypeVar('T')
+
+T = TypeVar("T")
+
 
 class LLMProviderResponse(ABC, Generic[T]):
     def __init__(self, response: T):
         self.response = response
-    
+
     @abstractmethod
     def get_content(self) -> str:
         pass
@@ -29,12 +32,15 @@ class LLMProviderResponse(ABC, Generic[T]):
     def get_tool_calls(self) -> Dict[str, Any]:
         pass
 
+
 class LLMProvider(ABC, Generic[T]):
     def __init__(self, config: LLMConfig):
         self.config = config
 
     @abstractmethod
-    async def generate(self, messages: List[Any], tools_schema: Optional[List[Dict[str, Any]]] = [], **kwargs) -> LLMProviderResponse[T]:
+    async def generate(
+        self, messages: List[Any], tools_schema: Optional[List[Dict[str, Any]]] = [], **kwargs
+    ) -> LLMProviderResponse[T]:
         """
         Generates a complete response asynchronously.
         Accepts extra kwargs for provider-specific options.
@@ -42,7 +48,9 @@ class LLMProvider(ABC, Generic[T]):
         pass
 
     @abstractmethod
-    async def generate_stream(self, messages: List[Any], tools_schema: Optional[List[Dict[str, Any]]] = [], **kwargs) -> AsyncIterator[Any]:
+    async def generate_stream(
+        self, messages: List[Any], tools_schema: Optional[List[Dict[str, Any]]] = [], **kwargs
+    ) -> AsyncIterator[Any]:
         """
         Generates a streaming response asynchronously.
         """
