@@ -1,10 +1,11 @@
 import json
 from datetime import datetime
-from typing import List, Dict, Any, Union, Optional
+from typing import List, Dict, Any, Union, Optional, AsyncIterator
 
 from exodus.core.models.llm import LLMProvider, LLMProviderResponse
 from exodus.core.models.memory import MemoryManager, Message
 from exodus.core.models.agent import AgentDefinition, HandoffRequest
+from exodus.core.models.events import ToolCallEvent, ToolResultEvent, AgentChange
 from exodus.core.tools.tool_executor import ToolExecutor
 from exodus.core.registries import agent_registry
 from exodus.settings import settings
@@ -79,9 +80,9 @@ class AgentEngine:
 
         return handoff_tools
 
-    async def run_loop(self, user_input: str) -> Optional[HandoffRequest]:
+    async def run_loop(self, user_input: str) -> AsyncIterator[Union[str, HandoffRequest]]:
         """
-        Execute the agent loop. Returns HandoffRequest if agent transfers control, None otherwise.
+        Execute the agent loop. Yields chunks of text or HandoffRequest.
         """
         if user_input:  ### Only add user input if provided (may be empty on handoff continuation)
             self.memory_manager.add_memory(Message(
@@ -100,10 +101,27 @@ class AgentEngine:
                     "content": self.agent_definition.system_prompt
                 })
             
-            response: LLMProviderResponse = await self.llm_provider.generate(context, tools_schema=self.all_tools_schema)
+            ### Use generate_stream to get chunks and yield them
+            chunks = []
+            
+            async for chunk in self.llm_provider.generate_stream(context, tools_schema=self.all_tools_schema):
+                chunks.append(chunk)
+                ### Try to yield content delta
+                try:
+                    delta = chunk.choices[0].delta
+                    if hasattr(delta, 'content') and delta.content:
+                        yield delta.content
+                except (AttributeError, IndexError):
+                    pass
+            
+            ### Rebuild the complete response from chunks
+            response = self.llm_provider.rebuild_response(chunks)
 
             if response.is_tool_call():
                 tool_calls = response.get_tool_calls()
+                
+                ### Yield event to signal tools are about to be called
+                yield ToolCallEvent(tool_calls=tool_calls)
                 
                 self.memory_manager.add_memory(Message(
                     role="assistant", 
@@ -136,12 +154,12 @@ class AgentEngine:
                             agent_name=self.agent_definition.name
                         ))
                         
-                        ### Return handoff request to orchestrator
-                        return HandoffRequest(
-                            target_agent_name=target_agent_name,
-                            reason=reason,
-                            preserve_memory=True
+                        ### Yield AgentChange event
+                        yield AgentChange(
+                            new_agent_name=target_agent_name,
+                            reason=reason
                         )
+                        return
                     
                     ### Regular tool execution
                     logger.info(f"Executing tool: {function_name}.")
@@ -149,6 +167,13 @@ class AgentEngine:
                     
                     try:
                         tool_result = await self.tool_executor.execute(function_name, function_args)
+                        
+                        ### Yield tool result event for display
+                        yield ToolResultEvent(
+                            tool_name=function_name,
+                            tool_args=function_args,
+                            result=str(tool_result)
+                        )
                         
                         self.memory_manager.add_memory(Message(
                             role="tool",
@@ -162,9 +187,18 @@ class AgentEngine:
                         logger.debug(f"Tool {function_name} executed successfully")
                     except Exception as e:
                         logger.error(f"Error executing tool {function_name}: {e}")
+                        error_msg = f"Error: {str(e)}"
+                        
+                        ### Yield error as tool result
+                        yield ToolResultEvent(
+                            tool_name=function_name,
+                            tool_args=function_args,
+                            result=error_msg
+                        )
+                        
                         self.memory_manager.add_memory(Message(
                             role="tool",
-                            content=f"Error: {str(e)}",
+                            content=error_msg,
                             timestamp=datetime.now(),
                             tool_call_id=tool_call_id,
                             name=function_name,
@@ -183,6 +217,3 @@ class AgentEngine:
             self.loop_count += 1
         
         ### No handoff occurred, normal completion
-        return None
-
-        

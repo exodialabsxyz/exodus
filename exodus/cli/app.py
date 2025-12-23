@@ -2,6 +2,7 @@
 Main Exodus CLI application using Typer.
 """
 import asyncio
+import json
 from typing import Optional, List
 import typer
 
@@ -9,6 +10,7 @@ from exodus.cli.session import ChatSession
 from exodus.cli.commands import CommandHandler
 from exodus.cli import display
 from exodus.logs import logger
+from exodus.core.models.events import ToolCallEvent, ToolResultEvent, AgentChange
 
 
 app = typer.Typer(
@@ -54,53 +56,66 @@ async def run_chat_loop(session: ChatSession):
                     break
                 continue
             
-            # Send message to agent
-            display.print_user_message(user_input)
-            display.print_thinking()
-            
             try:
                 # Reset loop count for new query
                 session.agent_engine.loop_count = 0
                 
-                # Get memory length before sending message to track new messages
-                memory_before = len(session.get_memory())
+                # Track current panel context and agent
+                current_panel_context = None
+                current_updater = None
+                current_agent = session.agent_definition.name
                 
-                # Send message and get response
-                await session.send_message(user_input)
+                try:
+                    ### Stream and handle events
+                    async for event in session.send_message_stream(user_input):
+                        
+                        if isinstance(event, str):
+                            # Text chunk - open panel if needed and update
+                            if current_panel_context is None:
+                                current_panel_context = display.stream_assistant_response(current_agent)
+                                current_updater = current_panel_context.__enter__()
+                            current_updater(event)
+                        
+                        elif isinstance(event, ToolCallEvent):
+                            # Close agent panel before showing tools
+                            if current_panel_context:
+                                current_panel_context.__exit__(None, None, None)
+                                current_panel_context = None
+                                current_updater = None
+                            
+                            # Display tool calls
+                            for tool_call in event.tool_calls:
+                                tool_name = tool_call.function.name
+                                try:
+                                    tool_args = json.loads(tool_call.function.arguments)
+                                except:
+                                    tool_args = {}
+                                display.print_tool_execution(tool_name, tool_args)
+                        
+                        elif isinstance(event, ToolResultEvent):
+                            # Display tool result
+                            if event.result and event.result.strip():
+                                display.print_tool_result(event.tool_name, event.result)
+                        
+                        elif isinstance(event, AgentChange):
+                            # Close current panel
+                            if current_panel_context:
+                                current_panel_context.__exit__(None, None, None)
+                                current_panel_context = None
+                                current_updater = None
+                            
+                            # Show handoff message
+                            display.print_system_message(
+                                f"\n[Transferring to {event.new_agent_name}: {event.reason}]\n"
+                            )
+                            
+                            # Update current agent for next panel
+                            current_agent = event.new_agent_name
                 
-                # Get all messages added during this interaction
-                memory = session.get_memory()
-                new_messages = memory[memory_before:]
-                
-                # Display tool calls and results from the interaction
-                # Skip the user message (already displayed) and only show tool interactions
-                for msg in new_messages:
-                    if msg.role == "user":
-                        # Skip user messages, already displayed above
-                        continue
-                    elif msg.role == "assistant" and hasattr(msg, 'tool_calls') and msg.tool_calls:
-                        # This assistant message contains tool calls
-                        import json
-                        for tool_call in msg.tool_calls:
-                            tool_name = tool_call.function.name
-                            tool_args = json.loads(tool_call.function.arguments)
-                            display.print_tool_execution(tool_name, tool_args)
-                    elif msg.role == "tool":
-                        # This is a tool result - only display if it has content
-                        if msg.content and msg.content.strip():
-                            tool_name = msg.name if hasattr(msg, 'name') and msg.name else "unknown"
-                            display.print_tool_result(tool_name, msg.content)
-                
-                # Display final assistant response
-                if memory:
-                    last_message = memory[-1]
-                    if last_message.role == "assistant":
-                        display.print_assistant_message(
-                            last_message.content or "",
-                            agent_name=session.agent_definition.name
-                        )
-                    else:
-                        display.print_system_message("Agent completed task")
+                finally:
+                    # Ensure panel is closed
+                    if current_panel_context:
+                        current_panel_context.__exit__(None, None, None)
                 
             except Exception as e:
                 display.print_error("Failed to process message", e)

@@ -5,11 +5,12 @@ Handles AgentEngine initialization and conversation state.
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, AsyncIterator, Union
 
 from exodus.agent_engine import AgentEngine
 from exodus.core.models.agent import AgentDefinition, HandoffRequest
 from exodus.core.models.llm import LLMConfig
+from exodus.core.models.events import AgentChange, ToolCallEvent, ToolResultEvent
 from exodus.core.registries import tool_registry, agent_registry
 from exodus.core.providers.litellm import LitellmProvider
 from exodus.core.memory.local_json_memory import LocalJsonMemoryManager
@@ -162,38 +163,49 @@ class ChatSession:
             agent_definition=self.agent_definition
         )
     
-    async def send_message(self, user_input: str) -> None:
+    async def send_message_stream(self, user_input: str):
         """
-        Send a message to the agent and get a response.
+        Send a message to the agent and get a streaming response.
         Supports automatic handoffs between agents.
         
         Args:
             user_input: User's message
+            
+        Yields:
+            Stream events (str, ToolCallEvent, ToolResultEvent, AgentChange)
         """
         current_input = user_input
         
         while True:
-            ### Execute current agent
-            result = await self.agent_engine.run_loop(current_input)
+            ### Execute current agent and propagate all events
+            agent_change = None
             
-            ### Check if result is a handoff request
-            if isinstance(result, HandoffRequest):
+            async for event in self.agent_engine.run_loop(current_input):
+                ### Propagate all events to CLI
+                yield event
+                
+                ### Track if handoff happened
+                if isinstance(event, AgentChange):
+                    agent_change = event
+                    break
+            
+            ### Handle agent handoff if it occurred
+            if agent_change:
                 current_agent_name = self.agent_definition.name
-                logger.info(f"Handoff: {current_agent_name} -> {result.target_agent_name}")
-                logger.info(f"Reason: {result.reason}")
+                logger.info(f"Handoff: {current_agent_name} -> {agent_change.new_agent_name}")
+                logger.info(f"Reason: {agent_change.reason}")
                 
                 try:
                     ### Load the target agent
-                    new_agent = agent_registry.get_agent(result.target_agent_name)
+                    new_agent = agent_registry.get_agent(agent_change.new_agent_name)
                     
-                    ### Add handoff context to memory if preserving
-                    if result.preserve_memory:
-                        from exodus.core.models.memory import Message
-                        self.memory_manager.add_memory(Message(
-                            role="system",
-                            content=f"[Handoff from {current_agent_name} to {result.target_agent_name}: {result.reason}]",
-                            timestamp=datetime.now()
-                        ))
+                    ### Add handoff context to memory
+                    from exodus.core.models.memory import Message
+                    self.memory_manager.add_memory(Message(
+                        role="tool",
+                        content=f"[Handoff from {current_agent_name} to {agent_change.new_agent_name}: {agent_change.reason}]",
+                        timestamp=datetime.now()
+                    ))
                     
                     ### Update agent definition
                     self.agent_definition = new_agent
@@ -214,15 +226,15 @@ class ChatSession:
                         initial_loop_count=current_loop_count
                     )
                     
-                    ### Continue with empty input (context already in memory)
+                    ### Continue with continuation prompt
                     current_input = "You have been reassigned by the previous agent. Continue with the conversation"
                     
                 except ValueError as e:
-                    logger.error(f"Handoff failed: Agent '{result.target_agent_name}' not found: {e}")
+                    logger.error(f"Handoff failed: Agent '{agent_change.new_agent_name}' not found: {e}")
                     from exodus.core.models.memory import Message
                     self.memory_manager.add_memory(Message(
-                        role="system",
-                        content=f"[Error] Cannot transfer to '{result.target_agent_name}': Agent not found.",
+                        role="tool",
+                        content=f"[Error] Cannot transfer to '{agent_change.new_agent_name}': Agent not found.",
                         timestamp=datetime.now()
                     ))
                     break

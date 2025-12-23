@@ -42,8 +42,13 @@ class LLMProvider(ABC, Generic[T]):
         pass
 
     @abstractmethod
-    async def generate_stream(self, messages: List[Any], tools_schema: Optional[List[Dict[str, Any]]] = [], **kwargs) -> AsyncIterator[str]:
+    async def generate_stream(self, messages: List[Any], tools_schema: Optional[List[Dict[str, Any]]] = [], **kwargs) -> AsyncIterator[Any]:
         """
         Generates a streaming response asynchronously.
         """
+        pass
+
+    @abstractmethod
+    def rebuild_response(self, chunks: List[Any]) -> LLMProviderResponse[T]:
+        """Rebuilds a complete response from a list of stream chunks."""
         pass

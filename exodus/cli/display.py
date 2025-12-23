@@ -8,7 +8,9 @@ from rich.syntax import Syntax
 from rich.table import Table
 from rich.text import Text
 from rich.status import Status
+from rich.live import Live
 from typing import Optional, Dict, Any
+from contextlib import contextmanager
 
 console = Console()
 
@@ -42,6 +44,81 @@ def print_banner(agent_name: Optional[str] = None, model: Optional[str] = None, 
 def print_user_message(content: str):
     """Display a user message."""
     console.print(f"\n[bold cyan]You:[/bold cyan] {content}")
+
+
+def print_assistant_chunk(chunk: str):
+    """Print a chunk of the assistant response without newlines."""
+    console.print(chunk, end="", style="green")
+
+
+@contextmanager
+def stream_assistant_response(agent_name: str):
+    """
+    Context manager for streaming assistant response with live updating panel.
+    
+    Usage:
+        with stream_assistant_response("agent_name") as updater:
+            async for chunk in stream:
+                updater(chunk)
+    """
+    content_buffer = []
+    char_count = [0]  # Use list to allow mutation in nested function
+    
+    def update_content(chunk: str):
+        content_buffer.append(chunk)
+        full_text = "".join(content_buffer)
+        return Panel(
+            Markdown(full_text),
+            title=f"[bold green]{agent_name}[/bold green]",
+            title_align="left",
+            border_style="green",
+            padding=(1, 2)
+        )
+    
+    class StreamUpdater:
+        def __init__(self, live):
+            self.live = live
+        
+        def __call__(self, chunk: str):
+            # Accumulate chunk
+            content_buffer.append(chunk)
+            char_count[0] += len(chunk)
+            
+            # Update panel every 3 characters or if chunk is large
+            if char_count[0] >= 3 or len(chunk) > 10:
+                full_text = "".join(content_buffer)
+                panel = Panel(
+                    Markdown(full_text),
+                    title=f"[bold green]{agent_name}[/bold green]",
+                    title_align="left",
+                    border_style="green",
+                    padding=(1, 2)
+                )
+                self.live.update(panel, refresh=True)
+                char_count[0] = 0  # Reset counter
+    
+    # Start with empty panel
+    initial_panel = Panel(
+        "",
+        title=f"[bold green]{agent_name}[/bold green]",
+        title_align="left",
+        border_style="green",
+        padding=(1, 2)
+    )
+    
+    console.print()  # Add newline before the panel
+    with Live(initial_panel, console=console, refresh_per_second=15) as live:
+        updater = StreamUpdater(live)
+        yield updater
+        # Final update to ensure all content is displayed
+        final_panel = Panel(
+            Markdown("".join(content_buffer)),
+            title=f"[bold green]{agent_name}[/bold green]",
+            title_align="left",
+            border_style="green",
+            padding=(1, 2)
+        )
+        live.update(final_panel, refresh=True)
 
 
 def print_assistant_message(content: str, agent_name: Optional[str] = None):

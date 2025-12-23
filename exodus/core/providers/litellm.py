@@ -26,8 +26,10 @@ class LitellmProvider(LLMProvider[ModelResponse]):
     def __init__(self, config: LLMConfig):
         super().__init__(config)
 
-    async def generate(self, messages: List[Union[Message, Dict[str, Any]]], tools_schema: Optional[List[Dict[str, Any]]] = [], **kwargs) -> LitellmProviderResponse:
-        
+    def _build_completion_args(self, 
+        messages: List[Union[Message, Dict[str, Any]]], 
+        tools_schema: Optional[List[Dict[str, Any]]] = [], **kwargs) -> Dict[str, Any]:
+        """Build completion arguments for litellm."""
         # Convert messages to OpenAI format if they aren't already dicts
         messages_dict = [message.to_openai_format() if isinstance(message, Message) else message for message in messages]
             
@@ -47,8 +49,30 @@ class LitellmProvider(LLMProvider[ModelResponse]):
             completion_args["api_base"] = self.config.custom_api_base
         
         completion_args.update(kwargs)
-        completion_args = {k: v for k, v in completion_args.items() if v is not None}
+        # Remove None values
+        return {k: v for k, v in completion_args.items() if v is not None}
+
+    async def generate(self, 
+        messages: List[Union[Message, Dict[str, Any]]], 
+        tools_schema: Optional[List[Dict[str, Any]]] = [], **kwargs) -> LitellmProviderResponse:
+        
+        completion_args = self._build_completion_args(messages, tools_schema, **kwargs)
         response = await litellm.acompletion(**completion_args)
         return LitellmProviderResponse(response)   
-    async def generate_stream(self, messages: List[Message], **kwargs):
-        pass
+
+    async def generate_stream(self, 
+        messages: List[Union[Message, Dict[str, Any]]], 
+        tools_schema: Optional[List[Dict[str, Any]]] = [], **kwargs) -> AsyncIterator[Any]:
+        
+        completion_args = self._build_completion_args(messages, tools_schema, **kwargs)
+        completion_args["stream"] = True
+        
+        ### In LiteLLM, awaiting acompletion with stream=True returns the generator
+        response = await litellm.acompletion(**completion_args)
+        async for chunk in response:
+            yield chunk
+
+    def rebuild_response(self, chunks: List[Any]) -> LitellmProviderResponse:
+        """Rebuild a complete response from chunks using litellm helper."""
+        full_response = litellm.stream_chunk_builder(chunks, messages=None)
+        return LitellmProviderResponse(full_response)

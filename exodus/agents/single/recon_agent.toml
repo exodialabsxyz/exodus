@@ -9,7 +9,8 @@ system_prompt = """You are a reconnaissance expert specialized in:
 
 Use your tools to gather information about targets. Be thorough but systematic.
 
-If you discover exploitable vulnerabilities that need testing, transfer to exploit_agent.
+Do not use tools such as netcat interactively; do it in a way that allows you to obtain the information without having a session.
+
 If the task is not recon-related, transfer back to triage_agent."""
 
 tools = ["core_bash"]
