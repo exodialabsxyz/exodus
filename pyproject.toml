@@ -3,7 +3,7 @@ requires = ["setuptools>=80.9.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "exodia"
+name = "exodus"
 version = "2025.12.15"
 description = "Lightweight, modular cybersecurity framework for AI-powered security"
 authors = [
@@ -38,6 +38,8 @@ Repository = "https://github.com/exodialabsxyz/exodus"
 
 [project.scripts]
 exodus-cli = "exodus.cli.app:main"
+exodus-server = "exodus.server.exodus_executor:main"
+exodus-server-exec = "exodus.server.exodus_client_cli:main"
 
 [project.optional-dependencies]
 dev = [

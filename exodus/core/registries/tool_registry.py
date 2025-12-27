@@ -1,4 +1,4 @@
-from typing import Callable, Dict
+from typing import Callable, Dict, List
 
 from exodus.logs import logger
 
@@ -27,3 +27,6 @@ class ToolPluginRegistry:
         if tool_name not in self._tools:
             raise ValueError(f"Tool {tool_name} not found")
         return self._tools[tool_name]
+
+    def get_tool_list(self) -> List[str]:
+        return list(self._tools.keys())

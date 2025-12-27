@@ -1,0 +1,32 @@
+# Virtual environments
+.venv/
+venv/
+env/
+
+# uv and python
+.uv/
+__pycache__/
+*.py[cod]
+
+# Git
+.git/
+.gitignore
+
+# Docker
+docker/
+!docker/exodus_security_executor/entrypoint.sh
+
+# Environment variables
+.env
+.secrets
+settings.toml
+
+# IDEs and editors
+.vscode/
+.idea/
+.cursor/
+
+# Tests and build
+.pytest_cache/
+dist/
+build/

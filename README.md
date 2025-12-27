@@ -1,4 +1,4 @@
-# EXODUS
+# EXODUS: Swarm Intelligence for Autonomous Cybersecurity
 
 EXODUS is a lightweight, modular, open-source cybersecurity framework. Create and share your agents, add capabilities by creating plugins, and automate your agent teams for pentesting, reconnaissance, vulnerability discovery, and much more.
 
@@ -264,6 +264,27 @@ execution_mode = "local"
 - Direct execution in your environment
 - Faster for trusted tools
 - Use for development and testing
+
+## 🐳 Exodus Security Executor Container
+
+EXODUS provides a specialized Docker container that runs an `exodus-server` daemon for executing Python-based tools in an isolated ParrotSec environment. Agents can communicate with this server via Unix sockets to execute EXODUS tools remotely.
+
+### Quick Start
+
+```bash
+# Build the image
+docker build -t exodus-security-executor -f docker/exodus_security_executor/Dockerfile .
+
+# Run the container
+docker run -d --name exodus-executor exodus-security-executor
+
+# View logs
+docker logs -f exodus-executor
+```
+
+The container automatically starts the `exodus-server` on `/tmp/exodus/executor.sock` and loads the full EXODUS tool registry. This allows agents to execute Python tools in an isolated, security-focused environment.
+
+For detailed documentation, communication protocols, and advanced usage, see [`docker/README.md`](docker/README.md)
 
 ## ⚡ Technical Highlights
 

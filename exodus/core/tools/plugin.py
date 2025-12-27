@@ -11,9 +11,16 @@ def core_bash_tool(command: str) -> str:
     return command
 
 
+@tool(
+    name="core_sum",
+    type="python",
+    description="Just a sum for testing",
+)
+def sum(a: int, b: int) -> int:
+    return a + b
+
+
 class CorePlugin:
     @staticmethod
     def get_tools():
-        return {
-            core_bash_tool.tool_name: core_bash_tool,
-        }
+        return {core_bash_tool.tool_name: core_bash_tool, sum.tool_name: sum}
