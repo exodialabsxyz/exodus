@@ -219,16 +219,8 @@ class ChatSession:
                     ### Load the target agent
                     new_agent = agent_registry.get_agent(agent_change.new_agent_name)
 
-                    ### Add handoff context to memory
-                    from exodus.core.models.memory import Message
-
-                    self.memory_manager.add_memory(
-                        Message(
-                            role="tool",
-                            content=f"[Handoff from {current_agent_name} to {agent_change.new_agent_name}: {agent_change.reason}]",
-                            timestamp=datetime.now(),
-                        )
-                    )
+                    ### REMOVED: Duplicate tool message that was causing the error
+                    ### The agent_engine.py already adds the correct tool message with tool_call_id
 
                     ### Update agent definition
                     self.agent_definition = new_agent
