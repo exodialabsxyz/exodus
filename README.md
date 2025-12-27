@@ -1,4 +1,4 @@
-# EXODUS
+# EXODUS: Swarm Intelligence for Autonomous Cybersecurity
 
 EXODUS is a lightweight, modular, open-source cybersecurity framework. Create and share your agents, add capabilities by creating plugins, and automate your agent teams for pentesting, reconnaissance, vulnerability discovery, and much more.
 

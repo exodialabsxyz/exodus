@@ -1,9 +1,9 @@
 from typing import Callable
 
 import docker
-
 from exodus.core.models.tool import ToolExecutionDriver
 from exodus.logs import logger
+from exodus.server.exodus_executor_client import ExodusExecutorClient
 from exodus.settings import settings
 
 
@@ -12,6 +12,7 @@ class DockerExecutorDriver(ToolExecutionDriver):
         self.docker_client = docker.from_env()
         self.default_image = settings.get("agent.execution.docker.default_image")
         self.default_image_name = settings.get("agent.execution.docker.default_image_name")
+        self.executor_client = ExodusExecutorClient()
 
     async def execute(self, tool_type: str, tool_function: Callable, **tool_args) -> str:
         try:
@@ -52,9 +53,27 @@ class DockerExecutorDriver(ToolExecutionDriver):
                 result = container.exec_run(command, stdout=True, stderr=True)
                 return result.output.decode("utf-8").strip()
             elif tool_type == "python":
-                logger.error("Python tools are not supported in Docker executor")
+                tool_name = tool_function.tool_name
+
+                logger.info(f"Executing Python tool '{tool_name}' via executor server")
+
+                try:
+                    response = self.executor_client.execute_tool(tool_name, tool_args)
+
+                    if response.get("status") == "success":
+                        result = response.get("message", "")
+                        logger.info(f"Tool '{tool_name}' executed successfully")
+                        return str(result)
+                    else:
+                        error_msg = response.get("message", "Unknown error")
+                        logger.error(f"Tool '{tool_name}' failed: {error_msg}")
+                        return f"Error: {error_msg}"
+                except Exception as e:
+                    logger.error(f"Failed to communicate with executor server: {e}")
+                    return f"Failed to execute tool: {str(e)}"
             else:
                 logger.error(f"Unsupported tool type: {tool_type}")
+                return f"Unsupported tool type: {tool_type}"
 
         except Exception as e:
             logger.error(f"Docker execution error: {e}")
