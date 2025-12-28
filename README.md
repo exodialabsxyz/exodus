@@ -169,28 +169,75 @@ EXODUS will automatically discover and load all plugins from the `exodus.plugins
 
 ## 🤖 Creating Custom Agents
 
-Define agents using simple TOML configuration files:
+EXODUS agents use simple TOML configuration files with **modular system prompts** stored in separate Markdown files.
+
+### Agent Structure
+
+```
+exodus/agents/
+├── single/          # Agent TOML configs
+│   ├── triage_agent.toml
+│   └── recon_agent.toml
+└── prompts/         # Markdown prompt files
+    ├── common.md
+    └── recon_agent.md
+```
+
+### Basic Configuration
 
 ```toml
 [agent]
-name = "pentest_agent"
-description = "Specialized agent for penetration testing"
-system_prompt = "You are a pentesting expert. Analyze targets and find vulnerabilities."
-tools = ["port_scanner", "linux_command", "core_echo"]
-handoffs = ["web_expert", "network_expert"]  # Agents this agent can delegate to
-max_iterations = 50
+name = "recon_agent"
+description = "Expert in reconnaissance and enumeration"
+system_prompt = ["common.md", "recon_agent.md"]  # Load multiple prompt files
+tools = ["core_bash"]
+handoffs = ["triage_agent", "web_exploit_agent"]
 
 [agent.llm]
 model = "gemini/gemini-2.5-pro"
-temperature = 0.7
+temperature = 0.5
 ```
 
-**Agent Configuration:**
-- **Declarative**: Define behavior in TOML, no code needed
-- **Tool selection**: Choose which capabilities each agent has
-- **LLM settings**: Per-agent model and parameters
-- **System prompts**: Customize agent personality and expertise
-- **Agent handoffs**: Delegate tasks to specialized agents dynamically
+### System Prompt Options
+
+**Option 1: Modular Prompts (Recommended)**
+```toml
+system_prompt = ["common.md", "recon_agent.md"]  # Loads from exodus/agents/prompts/
+```
+
+**Option 2: Single File**
+```toml
+system_prompt = ["recon_agent.md"]
+```
+
+**Option 3: Inline Text**
+```toml
+system_prompt = "You are a pentesting expert. Analyze targets."
+```
+
+### Agent Configuration Options
+
+- **name**: Unique agent identifier
+- **description**: Brief description for handoffs
+- **system_prompt**: String or array of `.md` files from `prompts/`
+- **tools**: List of tool names (e.g., `["core_bash"]`)
+- **handoffs**: Other agents to transfer control to
+- **max_iterations**: Override global iteration limit (optional)
+
+### Per-Agent LLM Settings
+
+```toml
+[agent.llm]
+model = "gemini/gemini-2.5-pro"    # Override default model
+temperature = 0.7                   # Randomness (0-2)
+max_tokens = 100000                 # Max response length
+```
+
+**Benefits:**
+- ✅ Reuse common instructions across agents
+- ✅ Keep TOML configs clean and simple
+- ✅ Better version control for prompts
+- ✅ Easy to update and maintain
 
 ## 🔄 Agent Handoffs
 

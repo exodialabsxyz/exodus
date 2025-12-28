@@ -1,0 +1,10 @@
+[agent]
+name = "privesc_agent"
+description = "Expert in privilege escalation for Linux and Windows systems"
+system_prompt = ["common.md", "privesc_agent.md"]
+
+tools = ["core_bash"]
+handoffs = ["triage_agent", "recon_agent", "exploit_agent"]
+
+[agent.llm]
+temperature = 0.6

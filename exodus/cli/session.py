@@ -138,7 +138,7 @@ class ChatSession:
             self.agent_definition.tools = tools  # Override agent tools
         else:
             # Use agent tools if defined, otherwise from settings or all registered
-            if self.agent_definition.tools:
+            if self.agent_definition.tools is not None:
                 self.tools = self.agent_definition.tools
             else:
                 cli_tools = settings.get("cli.default_tools")
