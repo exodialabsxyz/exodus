@@ -2,6 +2,8 @@ from pathlib import Path
 from typing import Dict, Optional, Union
 
 from exodus.core.models.agent import AgentDefinition
+from exodus.logs import logger
+from exodus.settings import BASE_DIR
 
 
 class AgentRegistry:
@@ -13,9 +15,8 @@ class AgentRegistry:
 
     def load_from_path(self, path: Optional[Union[str, Path]] = None):
         if path is None:
-            current_file = Path(__file__).resolve()
-            parent_dir = current_file.parent
-            path = parent_dir / "agents" / "single"
+            logger.debug(f"Loading agents from {BASE_DIR / 'exodus' / 'agents' / 'single'}")
+            path = BASE_DIR / "exodus" / "agents" / "single"
         else:
             path = Path(path) if isinstance(path, str) else path
 

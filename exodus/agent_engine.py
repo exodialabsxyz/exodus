@@ -21,6 +21,7 @@ class AgentEngine:
         agent_definition: AgentDefinition,
         initial_loop_count: int = 0,
     ):
+        logger.info(f"Using settings file: {settings.settings_file_path()}")
         self.llm_provider = llm_provider
         self.memory_manager = memory_manager
         self.tool_executor = tool_executor

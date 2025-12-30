@@ -5,7 +5,6 @@ Handles AgentEngine initialization and conversation state.
 
 import os
 from datetime import datetime
-from pathlib import Path
 from typing import Dict, List, Optional
 
 from exodus.agent_engine import AgentEngine
@@ -74,10 +73,8 @@ class ChatSession:
 
         # Load agents from registry
         try:
-            agents_path = Path("exodus/agents/single")
-            if agents_path.exists():
-                agent_registry.load_from_path(agents_path)
-                logger.info(f"Loaded {len(agent_registry._agents)} agents from registry")
+            agent_registry.load_from_path()
+            logger.info(f"Loaded {len(agent_registry._agents)} agents from registry")
         except Exception as e:
             logger.warning(f"Failed to load agents from registry: {e}")
 
