@@ -10,7 +10,7 @@ INSTALL_DIR="$HOME/.exodus"
 echo "--- Starting EXODUS Installation ---"
 
 ### Detect Debian based systems ###
-if [ -f /etc/debian_version]; then
+if [ -f /etc/debian_version ]; then
     echo "Detected Debian based system"
     echo "Installing Basedependencies..."
     sudo apt-get update && sudo apt-get install -y git python3 python3-pip python3-venv
