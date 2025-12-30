@@ -31,6 +31,16 @@ Key Features:
 
 ## 🚀 Installation & Setup
 
+### One-Line Installation (Recommended)
+
+To install EXODUS on Linux or macOS, simply run the following command in your terminal:
+
+```bash
+bash <(curl -sSL https://raw.githubusercontent.com/exodialabsxyz/exodus/main/exodus/install/bootstrap.sh)
+```
+
+This script will automatically detect your OS, install dependencies, and set up everything for you.
+
 ### Prerequisites
 
 - Python 3.11 or higher
