@@ -25,6 +25,6 @@ type = "json"
 workspace = ""
 
 [logging]
-level = "WARN"
+level = "ERROR"
 format = "[exodus] %(asctime)s - %(name)s - %(levelname)s - %(message)s"
 

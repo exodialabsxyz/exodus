@@ -1,6 +1,8 @@
 from typing import Any, AsyncIterator, Dict, List, Optional, Union
 
+import aiohttp
 import litellm
+from litellm.llms.custom_httpx.aiohttp_handler import BaseLLMAIOHTTPHandler
 from litellm.types.utils import ModelResponse
 
 from exodus.core.models.llm import LLMConfig, LLMProvider, LLMProviderResponse
@@ -27,6 +29,15 @@ class LitellmProviderResponse(LLMProviderResponse):
 class LitellmProvider(LLMProvider[ModelResponse]):
     def __init__(self, config: LLMConfig):
         super().__init__(config)
+
+        self._custom_session_handler = aiohttp.ClientSession(
+            timeout=aiohttp.ClientTimeout(total=300),
+            connector=aiohttp.TCPConnector(limit=1000, limit_per_host=200, keepalive_timeout=60),
+        )
+
+        litellm.base_llm_aiohttp_handler = BaseLLMAIOHTTPHandler(
+            client_session=self._custom_session_handler
+        )
 
     def _build_completion_args(
         self,
@@ -88,3 +99,8 @@ class LitellmProvider(LLMProvider[ModelResponse]):
         """Rebuild a complete response from chunks using litellm helper."""
         full_response = litellm.stream_chunk_builder(chunks, messages=None)
         return LitellmProviderResponse(full_response)
+
+    async def close(self):
+        """Closes the LLM provider."""
+        if hasattr(self, "_custom_session_handler"):
+            await self._custom_session_handler.close()

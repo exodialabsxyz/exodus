@@ -60,3 +60,8 @@ class LLMProvider(ABC, Generic[T]):
     def rebuild_response(self, chunks: List[Any]) -> LLMProviderResponse[T]:
         """Rebuilds a complete response from a list of stream chunks."""
         pass
+
+    @abstractmethod
+    async def close(self):
+        """Closes the LLM provider."""
+        pass

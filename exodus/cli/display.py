@@ -9,7 +9,6 @@ from rich.console import Console
 from rich.live import Live
 from rich.markdown import Markdown
 from rich.panel import Panel
-from rich.status import Status
 from rich.table import Table
 from rich.text import Text
 
@@ -199,7 +198,9 @@ def print_thinking():
 
 def show_spinner(message: str = "Processing"):
     """Create a spinner status for long operations."""
-    return Status(f"[dim]{message}...[/dim]", console=console, spinner="dots")
+    return console.status(
+        f"[bold cyan]{message}...[/bold cyan]", spinner="dots", refresh_per_second=10
+    )
 
 
 def print_help():

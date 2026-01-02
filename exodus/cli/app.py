@@ -4,15 +4,19 @@ Main Exodus CLI application using Typer.
 
 import asyncio
 import json
+import random
 from typing import Optional
 
 import typer
 
+### Light imports first
 from exodus.cli import display
-from exodus.cli.commands import CommandHandler
-from exodus.cli.session import ChatSession
-from exodus.core.models.events import AgentChange, ToolCallEvent, ToolResultEvent
 from exodus.logs import logger
+
+LOADING_PHRASES = [
+    "To hack or to be hacked, that is the question",
+    "L-l-l-l-l-look at you, hacker. A pa-pa-pathetic creature of meat and bone ... How can you challenge a perfect, immortal machine? — SHODAN",
+]
 
 app = typer.Typer(
     name="exodus-cli",
@@ -21,13 +25,16 @@ app = typer.Typer(
 )
 
 
-async def run_chat_loop(session: ChatSession):
+async def run_chat_loop(session):
     """
     Run the main chat loop.
 
     Args:
         session: Active chat session
     """
+    from exodus.cli.commands import CommandHandler
+    from exodus.core.models.events import AgentChange, ToolCallEvent, ToolResultEvent
+
     command_handler = CommandHandler(session)
 
     # Get tools info
@@ -88,7 +95,7 @@ async def run_chat_loop(session: ChatSession):
                                 tool_name = tool_call.function.name
                                 try:
                                     tool_args = json.loads(tool_call.function.arguments)
-                                except:
+                                except Exception:
                                     tool_args = {}
                                 display.print_tool_execution(tool_name, tool_args)
 
@@ -174,18 +181,36 @@ def chat(
         if tools:
             tools_list = [t.strip() for t in tools.split(",")]
 
-        # Initialize session
-        session = ChatSession(
-            agent_name=agent,
-            model=model,
-            tools=tools_list,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            api_key=api_key,
-        )
+        async def run_chat_loop_with_cleanup():
+            # START LOADING BEFORE IMPORTS
+            display.console.print("\n[bold cyan]Starting EXODUS ...[/bold cyan]")
 
-        # Run the chat loop
-        asyncio.run(run_chat_loop(session))
+            phrase = random.choice(LOADING_PHRASES)
+            with display.show_spinner(f"{phrase}"):
+                # Heavy imports inside the function to allow showing the message first
+                from exodus.cli.session import ChatSession
+
+                session = ChatSession(
+                    agent_name=agent,
+                    model=model,
+                    tools=tools_list,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    api_key=api_key,
+                )
+
+            display.console.print(f'[dim]"{phrase}"[/dim]')
+            display.console.print("[green][0] Ready[/green]\n")
+
+            try:
+                await run_chat_loop(session)
+            finally:
+                await session.close()
+                logger.info("Cleaning up session...")
+                await asyncio.sleep(0.5)  ### Double time to ensure the session is cleaned up
+                logger.info("Session cleaned up")
+
+        asyncio.run(run_chat_loop_with_cleanup())
 
     except ValueError as e:
         display.print_error(str(e))

@@ -57,7 +57,7 @@ docker = [
 ]
 
 [project.entry-points."exodus.plugins.tools"]
-core = "exodus.core.tools.plugin:CorePlugin"
+core = "exodus.plugins.core_tools.main:CoreToolsPlugin"
 
 [tool.setuptools.packages.find]
 include = ["exodus*"]

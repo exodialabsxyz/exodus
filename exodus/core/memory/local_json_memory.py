@@ -14,7 +14,7 @@ class LocalJsonMemoryManager(MemoryManager):
         self._workspace = settings.get("agent.memory.local.workspace", None)
 
         if not self._workspace:
-            logger.warning(
+            logger.debug(
                 "No workspace provided for local JSON memory manager, setting to the current working directory"
             )
             self._workspace = Path.cwd()

@@ -259,6 +259,10 @@ class ChatSession:
                 ### Normal completion, no handoff
                 break
 
+    async def close(self):
+        """Close the chat session."""
+        await self.llm_provider.close()
+
     def clear_history(self) -> None:
         """Clear the conversation history."""
         self.memory_manager.clear_memory()

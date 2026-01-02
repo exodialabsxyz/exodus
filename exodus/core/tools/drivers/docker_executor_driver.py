@@ -10,7 +10,17 @@ from exodus.settings import settings
 
 class DockerExecutorDriver(ToolExecutionDriver):
     def __init__(self):
-        self.docker_client = docker.from_env()
+        try:
+            logger.debug("Initializing Docker client")
+            self.docker_client = docker.from_env()
+            logger.debug("Docker client initialized successfully")
+        except Exception:
+            docker_message_error = (
+                "Error initializing Docker client. Please check if Docker is installed and running."
+            )
+            logger.error(docker_message_error)
+            raise ValueError(docker_message_error)
+
         self.default_image = settings.get("agent.execution.docker.default_image")
         self.default_image_name = settings.get("agent.execution.docker.default_image_name")
 
