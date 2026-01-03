@@ -1,9 +1,16 @@
 [agent]
 name = "privesc_agent"
 description = "Expert in privilege escalation for Linux and Windows systems"
-system_prompt = ["common.md", "privesc_agent.md"]
+system_prompt = ["common.md", "session.md", "privesc_agent.md"]
 
-tools = ["core_tools_bash"]
+tools = [
+    "core_tools_bash",
+    "core_tools_session_open",
+    "core_tools_session_interact",
+    "core_tools_session_read",
+    "core_tools_session_list",
+    "core_tools_session_close",
+]
 handoffs = ["triage_agent", "recon_agent", "exploit_agent"]
 
 [agent.llm]

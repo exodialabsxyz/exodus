@@ -14,6 +14,7 @@ RUN apt-get update && apt-get install -y \
     curl \
     git \
     exploitdb \
+    tmux \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv using the standalone installer

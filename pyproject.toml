@@ -28,7 +28,8 @@ classifiers = [
 dependencies = [
   "httpx==0.28.1",
   "litellm==1.80.10",
-  "pydantic==2.12.5"
+  "pydantic==2.12.5",
+  "libtmux==0.53.0"
 ]
 
 [project.urls]

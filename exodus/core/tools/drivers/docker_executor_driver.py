@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import json
 from typing import Callable
@@ -24,7 +25,7 @@ class DockerExecutorDriver(ToolExecutionDriver):
         self.default_image = settings.get("agent.execution.docker.default_image")
         self.default_image_name = settings.get("agent.execution.docker.default_image_name")
 
-    def _get_or_create_container(self) -> docker.models.containers.Container:
+    async def _get_or_create_container(self) -> docker.models.containers.Container:
         ### First of all check if the container is running and if not, start it
         try:
             container = self.docker_client.containers.get(self.default_image_name)
@@ -38,15 +39,19 @@ class DockerExecutorDriver(ToolExecutionDriver):
                 command="/bin/bash",
                 stdin_open=True,
             )
+            logger.info(f"Docker container '{self.default_image_name}' started successfully")
+            await asyncio.sleep(10)  ### Wait for the container to start
         except Exception as e:
             logger.error(f"Error getting Docker container '{self.default_image_name}': {e}")
-            return f"Failed to execute tool: {str(e)}"
+            raise RuntimeError(f"Failed to get or create Docker container: {str(e)}")
 
         if container.status != "running":
             logger.warning(
                 f"Docker container '{self.default_image_name}' is not running, starting it"
             )
             container.start()
+            logger.info(f"Docker container '{self.default_image_name}' started successfully")
+            await asyncio.sleep(10)  ### Wait for the container to start
 
         return container
 
@@ -57,7 +62,7 @@ class DockerExecutorDriver(ToolExecutionDriver):
                 if not isinstance(command, str):
                     raise ValueError(f"CLI tool must return a string command, got {type(command)}")
 
-                container = self._get_or_create_container()
+                container = await self._get_or_create_container()
                 logger.info(f"Executing command '{command}' in Docker container '{container.name}'")
                 result = container.exec_run(command, stdout=True, stderr=True)
                 return result.output.decode("utf-8").strip()
@@ -67,7 +72,7 @@ class DockerExecutorDriver(ToolExecutionDriver):
                 logger.info(f"Executing Python tool '{tool_name}' via executor server")
 
                 try:
-                    container = self._get_or_create_container()
+                    container = await self._get_or_create_container()
                     ### Encode tool arguments as base64 JSON
                     tool_args_json = json.dumps(tool_args)
                     tool_args_b64 = base64.b64encode(tool_args_json.encode()).decode()

@@ -1,4 +1,11 @@
 from exodus.core.decorators import tool
+from exodus.plugins.core_tools.session import (
+    session_close,
+    session_interact,
+    session_list,
+    session_open,
+    session_read,
+)
 
 
 @tool(
@@ -23,4 +30,13 @@ def sum(a: int, b: int) -> int:
 class CoreToolsPlugin:
     @staticmethod
     def get_tools():
-        return {bash.tool_name: bash, sum.tool_name: sum}
+        return {
+            bash.tool_name: bash,
+            sum.tool_name: sum,
+            ### Session tools - always registered, will fail with clear error if tmux not available
+            session_open.tool_name: session_open,
+            session_interact.tool_name: session_interact,
+            session_read.tool_name: session_read,
+            session_list.tool_name: session_list,
+            session_close.tool_name: session_close,
+        }
