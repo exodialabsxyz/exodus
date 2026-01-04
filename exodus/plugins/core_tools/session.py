@@ -1,4 +1,5 @@
 import subprocess
+from typing import Literal, Optional
 
 import libtmux
 
@@ -32,13 +33,8 @@ def _get_session_server():
         raise RuntimeError(f"Failed to connect to tmux server: {e}")
 
 
-@tool(
-    name="core_tools_session_open",
-    type="python",
-    description="Opens a new interactive tmux session with a specific name and executes a command in it. Use this for long-running or interactive commands like netcat listeners, SSH sessions, or msfconsole.",
-)
-def session_open(session_name: str, command: str) -> str:
-    """Opens a new tmux session and executes a command"""
+def _session_create(session_name: str, command: str) -> str:
+    """Creates a new tmux session and executes a command"""
     try:
         session_server = _get_session_server()
 
@@ -62,12 +58,7 @@ def session_open(session_name: str, command: str) -> str:
         return f"Error creating session: {str(e)}"
 
 
-@tool(
-    name="core_tools_session_interact",
-    type="python",
-    description="Sends input (commands or text) to an existing tmux session. Use this to interact with running sessions like typing commands in a shell, entering passwords, or sending data.",
-)
-def session_interact(session_name: str, input: str) -> str:
+def _session_interact(session_name: str, input_text: str) -> str:
     """Sends input to an existing tmux session"""
     try:
         session_server = _get_session_server()
@@ -80,12 +71,12 @@ def session_interact(session_name: str, input: str) -> str:
                 break
 
         if not session:
-            return f"Error: Session '{session_name}' not found. Use session_list to see available sessions."
+            return f"Error: Session '{session_name}' not found. Use action='list' to see available sessions."
 
         ### Get the active pane and send input
         pane = session.active_pane
         if pane:
-            pane.send_keys(input)
+            pane.send_keys(input_text)
             return f"Input sent to session '{session_name}' successfully."
         else:
             return f"Error: No active pane found in session '{session_name}'."
@@ -94,12 +85,7 @@ def session_interact(session_name: str, input: str) -> str:
         return f"Error sending input to session: {str(e)}"
 
 
-@tool(
-    name="core_tools_session_read",
-    type="python",
-    description="Reads the output from an existing tmux session. Captures the last N lines (default 50) to see what's happening in the session. Use this to check command results, see prompts, or verify connections.",
-)
-def session_read(session_name: str, lines: int = 50) -> str:
+def _session_read(session_name: str, lines: int = 50) -> str:
     """Reads output from a tmux session"""
     try:
         session_server = _get_session_server()
@@ -112,7 +98,7 @@ def session_read(session_name: str, lines: int = 50) -> str:
                 break
 
         if not session:
-            return f"Error: Session '{session_name}' not found. Use session_list to see available sessions."
+            return f"Error: Session '{session_name}' not found. Use action='list' to see available sessions."
 
         ### Get the active pane and capture content
         pane = session.active_pane
@@ -135,12 +121,7 @@ def session_read(session_name: str, lines: int = 50) -> str:
         return f"Error reading from session: {str(e)}"
 
 
-@tool(
-    name="core_tools_session_list",
-    type="python",
-    description="Lists all active tmux sessions with their names and status. Use this to see what sessions are currently running and available for interaction.",
-)
-def session_list() -> str:
+def _session_list() -> str:
     """Lists all active tmux sessions"""
     try:
         session_server = _get_session_server()
@@ -155,7 +136,7 @@ def session_list() -> str:
                 {
                     "name": sess.name,
                     "windows": len(sess.windows),
-                    "attached": sess.attached,
+                    "attached": sess.session_attached,
                 }
             )
 
@@ -172,12 +153,7 @@ def session_list() -> str:
         return f"Error listing sessions: {str(e)}"
 
 
-@tool(
-    name="core_tools_session_close",
-    type="python",
-    description="Closes and terminates a specific tmux session by name. Use this to clean up sessions that are no longer needed.",
-)
-def session_close(session_name: str) -> str:
+def _session_kill(session_name: str) -> str:
     """Closes a tmux session"""
     try:
         session_server = _get_session_server()
@@ -190,7 +166,7 @@ def session_close(session_name: str) -> str:
                 break
 
         if not session:
-            return f"Error: Session '{session_name}' not found. Use session_list to see available sessions."
+            return f"Error: Session '{session_name}' not found. Use action='list' to see available sessions."
 
         ### Kill the session
         session.kill()
@@ -198,3 +174,69 @@ def session_close(session_name: str) -> str:
 
     except Exception as e:
         return f"Error closing session: {str(e)}"
+
+
+@tool(
+    name="shell",
+    type="python",
+    description="Unified shell management tool. Manages interactive shells for running commands. Actions: 'create' (new session with command), 'interact' (send input to session), 'read' (capture session output), 'list' (show all sessions), 'kill' (close session).",
+)
+def shell(
+    action: Literal["create", "interact", "read", "list", "kill"],
+    session_name: Optional[str] = None,
+    command: Optional[str] = None,
+    args: Optional[str] = None,
+    lines: int = 50,
+) -> str:
+    """
+    Unified tmux session management tool.
+
+    Args:
+        action: Action to perform (create, interact, read, list, kill)
+        session_name: Name of the session (required for all actions except 'list')
+        command: Command to execute (for 'create') or input to send (for 'interact')
+        args: Arguments for the command (concatenated with command for 'create')
+        lines: Number of lines to read from session output (default 50, used only for 'read' action)
+
+    Returns:
+        String with the result of the operation
+    """
+
+    ### Validate required parameters based on action
+    if action == "create":
+        if not session_name:
+            return "Error: 'session_name' is required for action 'create'"
+        if not command:
+            return "Error: 'command' is required for action 'create'"
+
+        # Concatenate command and args
+        full_command = command
+        if args:
+            full_command = f"{command} {args}"
+
+        return _session_create(session_name, full_command)
+
+    elif action == "interact":
+        if not session_name:
+            return "Error: 'session_name' is required for action 'interact'"
+        if not command:
+            return "Error: 'command' is required for action 'interact' (use it to send input)"
+        return _session_interact(session_name, command)
+
+    elif action == "read":
+        if not session_name:
+            return "Error: 'session_name' is required for action 'read'"
+        return _session_read(session_name, lines)
+
+    elif action == "list":
+        return _session_list()
+
+    elif action == "kill":
+        if not session_name:
+            return "Error: 'session_name' is required for action 'kill'"
+        return _session_kill(session_name)
+
+    else:
+        return (
+            f"Error: Unknown action '{action}'. Valid actions: create, interact, read, list, kill"
+        )

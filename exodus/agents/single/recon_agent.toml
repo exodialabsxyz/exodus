@@ -4,14 +4,10 @@ description = "Expert in reconnaissance, enumeration, and information gathering"
 system_prompt = ["common.md", "session.md", "recon_agent.md"]
 
 tools = [
-    "core_tools_bash",
-    "core_tools_session_open",
-    "core_tools_session_interact",
-    "core_tools_session_read",
-    "core_tools_session_list",
-    "core_tools_session_close",
+    "shell",
+    "wait",
 ]
-handoffs = ["triage_agent"]
+handoffs = ["triage_agent", "exploit_agent", "web_exploit_agent", "privesc_agent"]
 
 [agent.llm]
 temperature = 0.5

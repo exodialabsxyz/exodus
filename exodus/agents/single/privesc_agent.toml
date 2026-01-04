@@ -4,14 +4,10 @@ description = "Expert in privilege escalation for Linux and Windows systems"
 system_prompt = ["common.md", "session.md", "privesc_agent.md"]
 
 tools = [
-    "core_tools_bash",
-    "core_tools_session_open",
-    "core_tools_session_interact",
-    "core_tools_session_read",
-    "core_tools_session_list",
-    "core_tools_session_close",
+    "shell",
+    "wait",
 ]
-handoffs = ["triage_agent", "recon_agent", "exploit_agent"]
+handoffs = ["triage_agent", "recon_agent", "exploit_agent", "web_exploit_agent"]
 
 [agent.llm]
 temperature = 0.6
