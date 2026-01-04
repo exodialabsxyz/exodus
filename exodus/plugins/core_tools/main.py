@@ -15,7 +15,7 @@ def sum(a: int, b: int) -> int:
 
 @tool(
     name="wait",
-    type="cli",
+    type="python",
     description="Waits for a specified amount of time",
 )
 async def wait(seconds: int = 30) -> str:
