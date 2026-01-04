@@ -109,9 +109,16 @@ def _session_read(session_name: str, lines: int = 50) -> str:
             ### Get last N lines
             if captured:
                 all_lines = captured if isinstance(captured, list) else captured.split("\n")
-                last_lines = all_lines[-lines:] if len(all_lines) > lines else all_lines
+                total_lines = len(all_lines)
+                last_lines = all_lines[-lines:] if total_lines > lines else all_lines
                 output = "\n".join(last_lines)
-                return f"Output from session '{session_name}':\n{output}"
+
+                # Inform if output is truncated
+                if total_lines > lines:
+                    truncated_msg = f"\n\n[OUTPUT TRUNCATED: Showing last {lines} of {total_lines} total lines. Use lines={total_lines} or higher to see all output.]"
+                    return f"Output from session '{session_name}':\n{output}{truncated_msg}"
+                else:
+                    return f"Output from session '{session_name}' ({total_lines} lines):\n{output}"
             else:
                 return f"Session '{session_name}' has no output yet."
         else:
