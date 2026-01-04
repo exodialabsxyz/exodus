@@ -44,8 +44,11 @@ def _session_create(session_name: str, command: str) -> str:
             if sess.name == session_name:
                 return f"Error: Session '{session_name}' already exists. Use a different name or close it first."
 
-        ### Create new session
+        ### Create new session with large history buffer
         new_session = session_server.new_session(session_name=session_name, attach=False)
+
+        ### Set a large history limit for this session (50000 lines)
+        new_session.set_option("history-limit", 50000)
 
         ### Get the first pane and send the command
         pane = new_session.active_pane
@@ -103,8 +106,8 @@ def _session_read(session_name: str, lines: int = 50) -> str:
         ### Get the active pane and capture content
         pane = session.active_pane
         if pane:
-            ### Capture the pane content
-            captured = pane.capture_pane()
+            ### Capture the full pane history using libtmux API
+            captured = pane.capture_pane(start="-", end="-")
 
             ### Get last N lines
             if captured:
