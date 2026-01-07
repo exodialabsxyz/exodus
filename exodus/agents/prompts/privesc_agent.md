@@ -87,11 +87,3 @@ Follow this systematic approach:
 Once you gain root or SYSTEM privileges:
 - **Document the escalation vector** in `report.md` with full details
 - **Extract credentials** from shadow files, registry, or credential stores
-
-## When to Transfer
-
-Based on your situation, transfer control:
-
-- **Need to exploit specific CVE for escalation?** -> **Transfer to exploit_agent**
-- **Need service enumeration for exploit search?** -> **Transfer to recon_agent**
-- **Task complete or not privesc-related?** -> **Transfer to triage_agent**

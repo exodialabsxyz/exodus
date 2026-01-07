@@ -50,11 +50,8 @@ task_prompt_template = """
 
 PROGRESS: {completed}/{total_tasks} tasks ({completion_rate})
 
-RECENT COMPLETIONS:
-{recent_completed}
-
-UPCOMING TASKS:
-{upcoming}
+PREVIOUS TASKS:
+{previous_tasks}
 
 CURRENT TASK:
     ID: {id}
@@ -154,32 +151,29 @@ def build_task_prompt(task: Task, plan: Plan) -> str:
 
     progress = plan.get_progress_summary()
 
-    ### Recent completions (last 3)
-    completed = [t for t in plan.tasks if t.status == TaskStatus.COMPLETED]
-    recent_completed = (
+    ### Previous tasks (history: completed, failed, or skipped)
+    history = [
+        t
+        for t in plan.tasks
+        if t.status in [TaskStatus.COMPLETED, TaskStatus.FAILED, TaskStatus.SKIPPED]
+    ]
+    previous_tasks = (
         "\n".join(
             [
-                f"{t.id}: {t.description}\n  Result: {t.result[:100]}...\n  Key findings: {', '.join(t.observations[:3])}"
-                for t in completed[-3:]
+                f"{t.id} [{t.status.value}]: {t.description}\n  Result: {t.result[:150] if t.result else 'No result'}...\n  Key findings: {', '.join(t.observations[:5]) if t.observations else 'None'}"
+                for t in history
             ]
         )
-        if completed
+        if history
         else "None yet"
-    )
-
-    ### Upcoming tasks (next 3)
-    remaining = [t for t in plan.tasks if t.status == TaskStatus.PENDING]
-    upcoming = (
-        "\n".join([f"{t.id}: {t.description}" for t in remaining[:3]]) if remaining else "None"
     )
 
     return task_prompt_template.format(
         goal=plan.goal,
         completed=progress["completed"],
         total_tasks=progress["total_tasks"],
-        completion_rate=progress["completion_rate"],
-        recent_completed=recent_completed,
-        upcoming=upcoming,
+        completion_rate=f"{progress['completion_rate']:.0%}",
+        previous_tasks=previous_tasks,
         id=task.id,
         description=task.description,
         success_criteria=task.success_criteria,
