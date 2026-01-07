@@ -92,6 +92,6 @@ Once you gain root or SYSTEM privileges:
 
 Based on your situation, transfer control:
 
-- **Need to exploit specific CVE for escalation?** → **Transfer to exploit_agent**
-- **Need service enumeration for exploit search?** → **Transfer to recon_agent**
-- **Task complete or not privesc-related?** → **Transfer to triage_agent**
+- **Need to exploit specific CVE for escalation?** -> **Transfer to exploit_agent**
+- **Need service enumeration for exploit search?** -> **Transfer to recon_agent**
+- **Task complete or not privesc-related?** -> **Transfer to triage_agent**

@@ -22,6 +22,7 @@ Key Features:
 
 - [Installation & Setup](#-installation--setup)
 - [Quick Start](#-quick-start)
+- [Execution Modes (Engines)](#️-execution-modes-engines)
 - [Creating Custom Plugins](#-creating-custom-plugins)
 - [Creating Custom Agents](#-creating-custom-agents)
 - [Agent Handoffs](#-agent-handoffs)
@@ -135,6 +136,157 @@ custom_api_base = "http://localhost:11434"
 [llm.default_provider_config]
 api_key = "ollama_apikey"
 ```
+
+## ⚙️ Execution Modes (Engines)
+
+EXODUS provides two distinct execution engines designed for different operational scenarios:
+
+### Interactive Mode (Human-in-the-Loop)
+
+The **default engine** for manual operation where a human operator (pentester, security analyst) maintains control and directs agent actions in real-time.
+
+```bash
+# Start interactive chat session
+exodus-cli chat --agent triage_agent
+```
+
+**Use Cases:**
+- **Manual pentesting**: Operator analyzes results and decides next steps
+- **Exploratory reconnaissance**: Human expertise guides the investigation
+- **Training and learning**: Understand how agents work step-by-step
+- **Compliance requirements**: Maintain human oversight for sensitive operations
+
+**Characteristics:**
+- Human operator controls the flow
+- Agent responds to each user message
+- Full visibility into agent reasoning
+- Manual approval before critical actions
+- Interactive feedback and course correction
+
+**Example workflow:**
+```
+You: "Scan this target for open ports"
+Agent: [Executes nmap scan, shows results]
+You: "Now enumerate the HTTP service on port 80"
+Agent: [Performs HTTP enumeration]
+You: "Looks vulnerable, try directory bruteforce"
+Agent: [Executes gobuster]
+```
+
+---
+
+### Automated Mode (Autonomous Execution)
+
+The **automated engine** (`exodus-cli auto`) enables fully autonomous operation with advanced planning, reflection, and self-correction capabilities. Designed for tasks that require minimal human intervention.
+
+```bash
+# Execute autonomous mission
+exodus-cli auto "Perform complete reconnaissance on exodialabs.xyz" \
+  --agent recon_agent \
+  --session scan_20250107 \
+  --verbose
+```
+
+**Use Cases:**
+- **Automated scanning**: Schedule unattended reconnaissance of infrastructure
+- **CI/CD security testing**: Integrate into pipelines for continuous assessment
+- **Bug bounty automation**: Autonomous discovery of vulnerabilities
+- **Large-scale operations**: Deploy agent swarms for distributed tasks
+- **Repetitive workflows**: Automate routine security assessments
+
+**Advanced Features:**
+
+#### 1. **Dynamic Planning**
+The agent generates a structured task plan based on the objective:
+```
+Objective: "Scan target and find vulnerabilities"
+Plan:
+  ├─ task_1: Port scan and service discovery
+  ├─ task_2: HTTP/SMB enumeration (depends on task_1)
+  ├─ task_3: Vulnerability identification
+  ├─ task_4: Exploit validation
+  └─ task_5: Report generation
+```
+
+#### 2. **Strategic Reflection**
+Periodic self-evaluation to ensure progress:
+- **Iteration-based**: Reviews progress every N steps (default: 25)
+- **Task-based**: Evaluates after N completed tasks (default: 3)
+- **Actions**: `CONTINUE`, `REPLAN`, `ESCALATE`, or `COMPLETE`
+
+```
+Reflection Checkpoint:
+  Progress: 3/6 tasks (50%)
+  Avg Score: 8.5/10
+  Action: CONTINUE
+  Reasoning: "Making good progress, no blockers detected"
+```
+
+#### 3. **Dynamic Replanning**
+Agent can regenerate the plan mid-execution if:
+- Strategy isn't working (repeated failures)
+- Environment changed (new services discovered)
+- Task becomes irrelevant (objective already achieved)
+
+```
+Reflection: REPLAN (confidence: 9.0)
+  Reasoning: "Initial plan assumed SSH access, but only HTTP is available.
+             Pivoting to web-based exploitation strategy."
+
+Plan Updated:
+  ├─ task_1: ✓ Port scan completed
+  ├─ task_2: ✓ Service enumeration
+  ├─ task_3_new: Web vulnerability scan (modified)
+  └─ task_4_new: SQL injection testing (new approach)
+```
+
+#### 4. **Checkpoint & Resume**
+Execution state is automatically saved:
+```bash
+# Start mission
+exodus-cli auto "Long-running task" --session my_mission
+
+# Interrupt with Ctrl+C or timeout
+^C Interrupted by user
+
+# Resume from checkpoint
+exodus-cli auto --resume --session my_mission
+```
+
+#### 5. **Escalation to Human**
+Agent can request assistance when stuck:
+```
+Reflection: ESCALATE
+  Reasoning: "Credentials required to proceed. Manual intervention needed."
+
+Agent requests human assistance
+```
+
+**Configuration Options:**
+
+```toml
+[agent.automated]
+reflection_iteration_interval = 25  # Reflect every N steps
+reflection_task_interval = 3        # Reflect every N completed tasks
+allow_replanning = true             # Enable dynamic replanning
+min_task_score = 0.3                # Minimum acceptable task quality
+```
+
+---
+
+### Choosing the Right Mode
+
+| Aspect | Interactive Mode | Automated Mode |
+|--------|------------------|----------------|
+| **Control** | Human operator | Autonomous agent |
+| **Planning** | Manual | Dynamic (LLM-generated) |
+| **Reflection** | N/A | Every N tasks/iterations |
+| **Replanning** | N/A | Automatic when needed |
+| **Best For** | Exploratory work, HITL | Repetitive tasks, CI/CD |
+| **Overhead** | Requires constant attention | Set and forget |
+| **Use Case** | Pentesting engagement | Automated security scanning |
+
+---
 
 ## 🔧 Creating Custom Plugins
 
@@ -276,15 +428,15 @@ temperature = 0.3
 ```
 User: "Scan this webapp and find SQL injection vulnerabilities"
   ↓
-triage_agent → Identifies security task
+triage_agent -> Identifies security task
   ↓
 transfer_to_security_expert(reason="Requires vulnerability assessment")
   ↓
-security_expert → Scans target, finds issues, needs code review
+security_expert -> Scans target, finds issues, needs code review
   ↓
 transfer_to_code_analyst(reason="Review vulnerable code patterns")
   ↓
-code_analyst → Provides fix recommendations
+code_analyst -> Provides fix recommendations
 ```
 
 **Benefits:**

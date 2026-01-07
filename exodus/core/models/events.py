@@ -38,3 +38,11 @@ class AgentChange(StreamEvent):
 
     new_agent_name: str
     reason: str
+
+
+@dataclass
+class AutomatedEvent(StreamEvent):
+    """Events specific to automated execution mode"""
+
+    event_type: str
+    data: Dict[str, Any]
