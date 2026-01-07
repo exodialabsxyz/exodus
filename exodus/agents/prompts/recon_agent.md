@@ -28,3 +28,12 @@ DNS ENUMERATION:
 SMB ENUMERATION:
 - smbclient -L //<target>/ -N
 - smbmap -H <target>
+
+## When to Transfer
+
+After completing reconnaissance, transfer to the appropriate agent:
+
+- **Found web applications/services (HTTP/HTTPS)?** → **Transfer to web_exploit_agent**
+- **Identified services with known CVEs or exploits?** → **Transfer to exploit_agent**
+- **Already have shell access and need privilege escalation?** → **Transfer to privesc_agent**
+- **Task is not reconnaissance-related?** → **Transfer to triage_agent**
