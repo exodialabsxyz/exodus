@@ -88,7 +88,7 @@ def _session_interact(session_name: str, input_text: str) -> str:
         return f"Error sending input to session: {str(e)}"
 
 
-def _session_read(session_name: str, lines: int = 50) -> str:
+def _session_read(session_name: str, lines: int = 200) -> str:
     """Reads output from a tmux session"""
     try:
         session_server = _get_session_server()
@@ -196,7 +196,7 @@ def shell(
     session_name: Optional[str] = None,
     command: Optional[str] = None,
     args: Optional[str] = None,
-    lines: int = 50,
+    lines: int = 200,
 ) -> str:
     """
     Unified tmux session management tool.
@@ -206,7 +206,7 @@ def shell(
         session_name: Name of the session (required for all actions except 'list')
         command: Command to execute (for 'create') or input to send (for 'interact')
         args: Arguments for the command (concatenated with command for 'create')
-        lines: Number of lines to read from session output (default 50, used only for 'read' action)
+        lines: Number of lines to read from session output (default 200, used only for 'read' action)
 
     Returns:
         String with the result of the operation

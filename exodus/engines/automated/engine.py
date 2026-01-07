@@ -336,7 +336,7 @@ class AutomatedAgentEngine(AgentEngine):
 
             ### Rebuild response
             response = self.llm_provider.rebuild_response(chunks)
-            response_text = "".join(full_content)
+            response_text = response.get_content()
 
             ### Handle tool calls
             if response.is_tool_call():
@@ -346,7 +346,7 @@ class AutomatedAgentEngine(AgentEngine):
                 self.memory_manager.add_memory(
                     Message(
                         role="assistant",
-                        content=response.get_content(),
+                        content=response_text,
                         timestamp=datetime.now(),
                         tool_calls=tool_calls,
                         agent_name=self.agent_definition.name,
@@ -436,7 +436,7 @@ class AutomatedAgentEngine(AgentEngine):
 
                         ### Track tool result for task evaluation
                         current_task_tool_results.append(
-                            f"{function_name}: {str(tool_result)[:200]}"
+                            f"{function_name}: {str(tool_result)[:1000]}"
                         )
 
                         logger.debug(f"Tool {function_name} executed successfully")
@@ -465,8 +465,7 @@ class AutomatedAgentEngine(AgentEngine):
                     continue
 
             else:
-                ### Non-tool response - evaluate task completion with LLM
-                response_text = response.get_content()
+                ### Non-tool response - add to memory
                 self.memory_manager.add_memory(
                     Message(
                         role="assistant",
@@ -476,6 +475,14 @@ class AutomatedAgentEngine(AgentEngine):
                     )
                 )
 
+            ### Evaluate task completion if no tool calls OR if completion markers are present
+            should_evaluate = (
+                not response.is_tool_call()
+                or "TASK_COMPLETED" in response_text
+                or "TASK_FAILED" in response_text
+            )
+
+            if should_evaluate:
                 ### Evaluate task status with structured output
                 current_task = self.plan.get_current_task()
                 if current_task:

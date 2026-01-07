@@ -212,7 +212,7 @@ def build_reflection_prompt(plan: Plan) -> str:
 
 def build_task_evaluation_prompt(task: Task, agent_response: str, tool_results: list) -> str:
     """Build prompt for task completion evaluation"""
-    tool_results_str = "\n".join(tool_results[-3:]) if tool_results else "No tool results yet"
+    tool_results_str = "\n".join(tool_results[-10:]) if tool_results else "No tool results yet"
 
     return task_evaluation_prompt_template.format(
         task_id=task.id,
