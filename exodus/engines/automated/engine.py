@@ -336,7 +336,7 @@ class AutomatedAgentEngine(AgentEngine):
 
             ### Rebuild response
             response = self.llm_provider.rebuild_response(chunks)
-            response_text = response.get_content()
+            response_text = response.get_content() or ""
 
             ### Handle tool calls
             if response.is_tool_call():
