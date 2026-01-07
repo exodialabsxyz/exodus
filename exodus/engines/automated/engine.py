@@ -50,7 +50,7 @@ class AutomatedAgentEngine(AgentEngine):
 
         ### Reflection settings
         self.reflection_iteration_interval = settings.get(
-            "agent.automated.reflection_iteration_interval", 25
+            "agent.automated.reflection_iteration_interval", 75
         )
         self.reflection_task_interval = settings.get("agent.automated.reflection_task_interval", 3)
         self.iterations_since_reflection = 0
@@ -473,10 +473,6 @@ class AutomatedAgentEngine(AgentEngine):
                                 agent_name=self.agent_definition.name,
                             )
                         )
-
-                ### If handoff occurred, continue main loop with new agent
-                if handoff_occurred:
-                    continue
 
             else:
                 ### Non-tool response - add to memory
