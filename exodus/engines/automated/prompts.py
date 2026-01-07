@@ -65,6 +65,7 @@ CURRENT TASK:
 3. **OBSERVATION**: Review results and determine if task succeeded
 
 # EXECUTION RULES:
+- SPECIALTY CHECK: Before acting, verify if you are the best specialist for THIS specific task. If another agent (e.g., recon, exploit, web_exploit, privesc, triage) is better suited, use the 'transfer_to_<agent_name>' tool immediately to hand off the task.
 - FOCUS: Work ONLY on the current task, ignore other tasks
 - SINGLE-THREAD: Complete one action before starting another
 - VERIFY: Check results match the success criteria

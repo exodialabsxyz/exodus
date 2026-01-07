@@ -389,10 +389,22 @@ class AutomatedAgentEngine(AgentEngine):
 
                         self.agent_definition = agent_registry.get_agent(target_agent_name)
 
+                        ### Update LLM provider config if the new agent has one
+                        if self.agent_definition.llm_config:
+                            logger.info(
+                                f"Updating LLM provider config for {target_agent_name}: {self.agent_definition.llm_config.model}"
+                            )
+                            self.llm_provider.config = self.agent_definition.llm_config
+
                         ### Rebuild tools schema for new agent
                         self.tools_schema = self._build_tools_schema()
                         self.handoff_tools_schema = self._build_handoff_tools()
                         self.all_tools_schema = self.tools_schema + self.handoff_tools_schema
+
+                        ### Reset loop count to give the new agent a fresh budget for this task
+                        logger.info(f"Resetting loop_count for handoff to {target_agent_name}")
+                        self.loop_count = 0
+                        self.iterations_since_reflection = 0
 
                         ### Add a user message for the new agent to continue the task
                         task = self.plan.get_current_task()
@@ -407,7 +419,9 @@ class AutomatedAgentEngine(AgentEngine):
 
                         logger.info(f"Switched to {target_agent_name}, continuing task execution")
                         handoff_occurred = True
-                        break
+                        # We don't break anymore to allow other tools in the same response to execute
+                        # though typically a handoff IS the final action in a turn.
+                        continue
 
                     ### Regular tool execution
                     logger.info(f"Executing tool: {function_name}")
