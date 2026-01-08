@@ -2,13 +2,6 @@
 
 EXODUS is a lightweight, modular, open-source cybersecurity framework. Create and share your agents, add capabilities by creating plugins, and automate your agent teams for pentesting, reconnaissance, vulnerability discovery, and much more.
 
-Key Features:
-
-+ Use the model you want: support for DeepSeek, Ollama, Google, OpenAI, and more.
-+ Modular architecture: easily create or use plugins to add functionalities to your agents.
-+ Multi-agent swarm architecture: from individual agents to specialized teams with different patterns (central orchestrator, agent delegation, etc.)
-+ Lightweight implementation: avoids heavy agent libraries and uses only what is strictly necessary.
-
 ---
 
 <div align="center">
@@ -17,6 +10,13 @@ Key Features:
 </div>
 
 ---
+
+## Key Features
+
++ Use the model you want: support for DeepSeek, Ollama, Google, OpenAI, and more.
++ Modular architecture: easily create or use plugins to add functionalities to your agents.
++ Multi-agent swarm architecture: from individual agents to specialized teams with different patterns (central orchestrator, agent delegation, etc.)
++ Lightweight implementation: avoids heavy agent libraries and uses only what is strictly necessary.
 
 ## 📋 Table of Contents
 
