@@ -7,5 +7,5 @@ tools = []
 handoffs = ["recon_agent", "exploit_agent", "privesc_agent", "web_exploit_agent"]
 
 [agent.llm]
-temperature = 0.5
+temperature = 0.4
 

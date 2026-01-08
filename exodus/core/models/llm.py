@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, AsyncIterator, Dict, Generic, List, Optional, TypeVar
+from typing import Any, AsyncIterator, Dict, Generic, List, Optional
+
+from exodus.core.models.types import OutputSchemaType, T
 
 
 @dataclass
@@ -11,9 +13,6 @@ class LLMConfig:
     max_tokens: Optional[int] = 100000
     temperature: float = 0.7
     custom_api_base: Optional[str] = None
-
-
-T = TypeVar("T")
 
 
 class LLMProviderResponse(ABC, Generic[T]):
@@ -39,7 +38,11 @@ class LLMProvider(ABC, Generic[T]):
 
     @abstractmethod
     async def generate(
-        self, messages: List[Any], tools_schema: Optional[List[Dict[str, Any]]] = [], **kwargs
+        self,
+        messages: List[Any],
+        tools_schema: Optional[List[Dict[str, Any]]] = [],
+        output_schema: Optional[OutputSchemaType] = None,
+        **kwargs,
     ) -> LLMProviderResponse[T]:
         """
         Generates a complete response asynchronously.
@@ -49,7 +52,11 @@ class LLMProvider(ABC, Generic[T]):
 
     @abstractmethod
     async def generate_stream(
-        self, messages: List[Any], tools_schema: Optional[List[Dict[str, Any]]] = [], **kwargs
+        self,
+        messages: List[Any],
+        tools_schema: Optional[List[Dict[str, Any]]] = [],
+        output_schema: Optional[OutputSchemaType] = None,
+        **kwargs,
     ) -> AsyncIterator[Any]:
         """
         Generates a streaming response asynchronously.

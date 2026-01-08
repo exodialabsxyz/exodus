@@ -164,6 +164,7 @@ logs/
 # Exodus Memory dumps
 exodus_memory_*.json
 session.json
+exodus_checkpoints/*
 
 # Exodus settings file
 settings.json

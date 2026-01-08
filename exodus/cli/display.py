@@ -332,3 +332,78 @@ def get_input(prompt: str = "You", agent_name: Optional[str] = None) -> str:
 def print_goodbye():
     """Display goodbye message."""
     console.print("\n[cyan]Goodbye[/cyan]\n")
+
+
+def print_plan_table(plan_data: Dict[str, Any]):
+    """Display the execution plan as a table."""
+    table = Table(
+        title=f"[bold green]Execution Plan: {plan_data.get('goal', 'Objective')}[/bold green]",
+        border_style="green",
+        header_style="bold cyan",
+        show_lines=True,
+    )
+
+    table.add_column("ID", style="dim", width=10)
+    table.add_column("Task Description", style="white")
+    table.add_column("Success Criteria", style="dim")
+    table.add_column("Dependencies", style="magenta")
+
+    for task in plan_data.get("tasks", []):
+        deps = ", ".join(task.get("dependencies", [])) or "-"
+        table.add_row(
+            task.get("id", "N/A"),
+            task.get("description", "No description"),
+            task.get("success_criteria", "N/A"),
+            deps,
+        )
+
+    console.print()
+    console.print(table)
+    console.print()
+
+
+def print_task_header(task_id: str, description: str, attempt: int = 1):
+    """Display a header for a new task."""
+    title = Text.assemble(
+        ("TASK: ", "bold cyan"),
+        (f"{task_id}", "bold white"),
+        (f" [Attempt {attempt}]", "dim"),
+    )
+
+    panel = Panel(
+        Text(description, style="white"),
+        title=title,
+        title_align="left",
+        border_style="cyan",
+        padding=(0, 2),
+    )
+    console.print()
+    console.print(panel)
+
+
+def print_task_completion(task_id: str, result: str, duration: float, score: float = 0.0):
+    """Display a summary of a completed task."""
+    score_color = "green" if score > 0.7 else "yellow" if score > 0.4 else "red"
+
+    content = Text()
+    content.append("Result: ", style="bold")
+    content.append(f"{result}\n")
+    content.append("Duration: ", style="bold")
+    content.append(f"{duration:.1f}s")
+    content.append(" | ", style="dim")
+    content.append("Score: ", style="bold")
+    content.append(f"{score * 10:.1f}/10", style=score_color)
+
+    panel = Panel(
+        content,
+        title=f"[bold green]✓ {task_id} Completed[/bold green]",
+        title_align="left",
+        border_style="green",
+        padding=(0, 2),
+    )
+    console.print(panel)
+
+
+def print_step(message: str, icon: str = "->", style: str = "dim"):
+    """Print a simple step or system event line."""
+    console.print(f"  [{style}]{icon} {message}[/{style}]")

@@ -7,6 +7,7 @@ from litellm.types.utils import ModelResponse
 
 from exodus.core.models.llm import LLMConfig, LLMProvider, LLMProviderResponse
 from exodus.core.models.memory import Message
+from exodus.core.models.types import OutputSchemaType
 
 
 class LitellmProviderResponse(LLMProviderResponse):
@@ -43,6 +44,7 @@ class LitellmProvider(LLMProvider[ModelResponse]):
         self,
         messages: List[Union[Message, Dict[str, Any]]],
         tools_schema: Optional[List[Dict[str, Any]]] = [],
+        output_schema: Optional[OutputSchemaType] = None,
         **kwargs,
     ) -> Dict[str, Any]:
         """Build completion arguments for litellm."""
@@ -64,6 +66,10 @@ class LitellmProvider(LLMProvider[ModelResponse]):
         if tools_schema and len(tools_schema) > 0:
             completion_args["tools"] = tools_schema
 
+        # Add response format if output_schema is provided
+        if output_schema is not None:
+            completion_args["response_format"] = output_schema
+
         if self.config.custom_api_base is not None:
             completion_args["api_base"] = self.config.custom_api_base
 
@@ -75,9 +81,12 @@ class LitellmProvider(LLMProvider[ModelResponse]):
         self,
         messages: List[Union[Message, Dict[str, Any]]],
         tools_schema: Optional[List[Dict[str, Any]]] = [],
+        output_schema: Optional[OutputSchemaType] = None,
         **kwargs,
     ) -> LitellmProviderResponse:
-        completion_args = self._build_completion_args(messages, tools_schema, **kwargs)
+        completion_args = self._build_completion_args(
+            messages, tools_schema, output_schema, **kwargs
+        )
         response = await litellm.acompletion(**completion_args)
         return LitellmProviderResponse(response)
 
@@ -85,9 +94,12 @@ class LitellmProvider(LLMProvider[ModelResponse]):
         self,
         messages: List[Union[Message, Dict[str, Any]]],
         tools_schema: Optional[List[Dict[str, Any]]] = [],
+        output_schema: Optional[OutputSchemaType] = None,
         **kwargs,
     ) -> AsyncIterator[Any]:
-        completion_args = self._build_completion_args(messages, tools_schema, **kwargs)
+        completion_args = self._build_completion_args(
+            messages, tools_schema, output_schema, **kwargs
+        )
         completion_args["stream"] = True
 
         ### In LiteLLM, awaiting acompletion with stream=True returns the generator
