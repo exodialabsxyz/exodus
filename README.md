@@ -12,8 +12,8 @@ Key Features:
 ---
 
 <div align="center">
-<img src="docs/readme_screenshot.png" alt="EXODUS CLI - Agent Handoffs in Action" width="800"/>
-*Triage agent routing requests to specialized agents with seamless handoffs*
+<img src="docs/machine_resolution.gif" alt="EXODUS - Autonomous Hack The Box Machine Resolution" width="800"/>
+*Autonomous resolution of a Hack The Box machine using the Exodus framework (Video accelerated)*
 </div>
 
 ---
@@ -538,6 +538,15 @@ Simply set the model in your configuration (using litellm):
 [llm]
 default_model = "provider/model-name"
 ```
+
+## 🏆 Showcases & Writeups
+
+See EXODUS in action! Explore our collection of automated mission reports and writeups demonstrating how the framework resolves real-world security challenges.
+
+👉 **[Browse All Writeups](writeups/)**
+
+### Featured Missions:
+- **[HTB Cap](writeups/hackthebox_machines/Cap/README.md)**: Full compromise of a Linux machine involving IDOR, credential harvesting, and Linux Capabilities exploitation.
 
 ## 🤝 Contributing
 
