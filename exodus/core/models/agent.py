@@ -104,6 +104,9 @@ class AgentDefinition:
             provider=llm_data.get("provider") or settings.get("llm.default_provider", "litellm"),
             temperature=llm_data.get("temperature", settings.get("llm.default_temperature", 0.7)),
             max_tokens=llm_data.get("max_tokens", settings.get("llm.default_max_tokens", 100000)),
+            max_context_tokens=llm_data.get(
+                "max_context_tokens", settings.get("llm.default_max_context_tokens", None)
+            ),
             custom_api_base=llm_data.get(
                 "custom_api_base", settings.get("llm.custom_api_base", None)
             ),

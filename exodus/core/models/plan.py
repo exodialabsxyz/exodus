@@ -114,12 +114,14 @@ class Plan(BaseModel):
         """Get the currently active task"""
         if not self.current_task_id:
             return None
+        ### None as next argument in order to avoid an error when no task is found
         return next((t for t in self.tasks if t.id == self.current_task_id), None)
 
     def get_next_task(self) -> Optional[Task]:
         """Get next pending task with all dependencies completed"""
         completed_ids = {t.id for t in self.tasks if t.status == TaskStatus.COMPLETED}
 
+        ### TODO: Better an Iterator to change PENDING status (avoid one if per execution loop)
         for task in self.tasks:
             if task.status != TaskStatus.PENDING:
                 continue
@@ -136,10 +138,23 @@ class Plan(BaseModel):
 
     def get_progress_summary(self) -> Dict[str, Any]:
         """Get summary of plan progress"""
-        total = len(self.tasks)
-        completed = sum(1 for t in self.tasks if t.status == TaskStatus.COMPLETED)
-        failed = sum(1 for t in self.tasks if t.status == TaskStatus.FAILED)
-        in_progress = sum(1 for t in self.tasks if t.status == TaskStatus.IN_PROGRESS)
+
+        completed = 0
+        failed = 0
+        in_progress = 0
+        total = 0
+
+        for task in self.tasks:
+            total += 1
+            match task.status:
+                case TaskStatus.COMPLETED:
+                    completed += 1
+                case TaskStatus.FAILED:
+                    failed += 1
+                case TaskStatus.IN_PROGRESS:
+                    in_progress += 1
+                case _:
+                    pass
 
         return {
             "total_tasks": total,
@@ -148,6 +163,5 @@ class Plan(BaseModel):
             "in_progress": in_progress,
             "pending": total - completed - failed - in_progress,
             "completion_rate": completed / total if total > 0 else 0,
-            "avg_score": sum(t.score for t in self.tasks if t.status == TaskStatus.COMPLETED)
-            / max(completed, 1),
+            "avg_score": completed / max(completed, 1) if completed > 0 else 0,
         }

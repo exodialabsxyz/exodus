@@ -38,7 +38,7 @@ Repository = "https://github.com/exodialabsxyz/exodus"
 "Bug Tracker" = "https://github.com/exodialabsxyz/exodus/issues"
 
 [project.scripts]
-exodus-cli = "exodus.cli.app:main"
+exodus = "exodus.cli.app:main"
 exodus-server = "exodus.server.exodus_executor:main"
 exodus-server-exec = "exodus.server.exodus_client_cli:main"
 

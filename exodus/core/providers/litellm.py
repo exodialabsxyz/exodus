@@ -112,6 +112,10 @@ class LitellmProvider(LLMProvider[ModelResponse]):
         full_response = litellm.stream_chunk_builder(chunks, messages=None)
         return LitellmProviderResponse(full_response)
 
+    def count_tokens(self, messages: List[Dict[str, Any]]) -> int:
+        """Counts the number of tokens in the given messages using litellm."""
+        return litellm.token_counter(model=self.config.model, messages=messages)
+
     async def close(self):
         """Closes the LLM provider."""
         if hasattr(self, "_custom_session_handler"):

@@ -72,6 +72,7 @@ pip install -e .
    [llm]
    default_model = "gemini/gemini-2.5-flash"
    default_provider = "litellm"
+   default_max_context_tokens = 700000
    custom_api_base = ""  # Optional: for local models or custom endpoints
    
    [llm.default_provider_config]
@@ -393,6 +394,7 @@ system_prompt = "You are a pentesting expert. Analyze targets."
 model = "gemini/gemini-2.5-pro"    # Override default model
 temperature = 0.7                   # Randomness (0-2)
 max_tokens = 100000                 # Max response length
+max_context_tokens = 700000         # Max tokens on context
 ```
 
 **Benefits:**
@@ -444,6 +446,40 @@ code_analyst -> Provides fix recommendations
 - **Automatic routing**: LLM decides when to delegate based on task requirements
 - **Seamless context**: Conversation flows naturally between agents
 - **No orchestrator needed**: Agents self-coordinate through handoffs
+
+---
+
+## 🧠 Context Management
+
+EXODUS includes a context strategy to handle long-running missions without exceeding LLM token limits or losing critical information.
+
+When an agent's conversation history approaches the `max_context_tokens` limit, EXODUS automatically:
+
+1.  **Detects the threshold**: Triggers when current tokens reach 90% of the limit.
+2.  **Self-Summarization**: Uses the agent's LLM to analyze the oldest 60% of the conversation.
+3.  **Keypoint Extraction**: Generates a technical summary that preserves entities, tool results, and pending tasks.
+4.  **Memory Update**: Replaces the old messages with a single summary message, freeing up context for new interactions.
+
+### Configuration
+
+You can enable and tune this behavior in your `settings.toml` or per-agent configuration:
+
+```toml
+[llm]
+# Global default (optional)
+default_max_context_tokens = 700000
+
+# Per-agent override in agent TOML
+[agent.llm]
+max_context_tokens = 500000
+```
+
+**Benefits:**
+- **Long Sessions**: Run extremely long missions without "Context Window Exceeded" errors.
+- **Cost Optimization**: Keeps context lean, reducing token usage in subsequent calls.
+- **Focus**: The LLM stays focused on recent results while retaining a high-level view of the past.
+
+---
 
 ## 🐳 Secure Execution Modes
 

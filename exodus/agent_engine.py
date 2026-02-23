@@ -47,6 +47,85 @@ class AgentEngine:
 
         return tools
 
+    async def _check_and_compress_context(self):
+        """
+        Checks if the current context exceeds a threshold and performs recursive compression.
+        The threshold is determined by llm_config.max_context_tokens.
+        """
+        threshold = self.agent_definition.llm_config.max_context_tokens
+        if threshold is None:
+            return
+
+        context = self.memory_manager.get_llm_context()
+        if not context:
+            return
+
+        current_tokens = self.llm_provider.count_tokens(context)
+
+        ### We trigger compression when we reach 90% of the threshold to be safe
+        if current_tokens < (threshold * 0.9):
+            return
+
+        logger.info(
+            f"Context threshold reached ({current_tokens}/{threshold}). Starting recursive compression..."
+        )
+
+        messages = self.memory_manager.get_memory()
+        ### We'll compress the first 60% of messages
+        num_to_compress = int(len(messages) * 0.6)
+
+        if num_to_compress < 2:
+            logger.warning("Not enough messages to compress effectively.")
+            return
+
+        messages_to_summarize = messages[:num_to_compress]
+        remaining_messages = messages[num_to_compress:]
+
+        history_text = ""
+        for m in messages_to_summarize:
+            history_text += f"{m.role.upper()}: {m.content}\n"
+
+        summary_prompt = [
+            {
+                "role": "system",
+                "content": (
+                    "You are an expert memory management assistant. "
+                    "Your task is to summarize the following conversation history very concisely but technically. "
+                    "Preserve entities, actions performed, tool results, and pending tasks. "
+                    "The summary will be used as future context for the agent."
+                ),
+            },
+            {
+                "role": "user",
+                "content": f"Summarize the following conversation history:\n\n{history_text}\n\nTechnical and structured summary:",
+            },
+        ]
+
+        try:
+            logger.info(f"Summarizing {num_to_compress} old messages...")
+            response = await self.llm_provider.generate(summary_prompt)
+            summary_content = response.get_content()
+
+            if not summary_content:
+                logger.error("Failed to generate summary content.")
+                return
+
+            summary_message = Message(
+                role="assistant",
+                content=f"[PREVIOUS CONTEXT SUMMARY]: {summary_content}",
+                timestamp=datetime.now(),
+                agent_name="system_compressor",
+            )
+
+            new_memory = [summary_message] + remaining_messages
+            self.memory_manager.replace_memory(new_memory)
+
+            new_tokens = self.llm_provider.count_tokens(self.memory_manager.get_llm_context())
+            logger.info(f"Compression complete. New token count: {new_tokens}")
+
+        except Exception as e:
+            logger.error(f"Error during context compression: {e}")
+
     def _build_handoff_tools(self) -> List[Dict[str, Any]]:
         """Build handoff tools from agent's allowed handoffs with descriptions from registry"""
         handoff_tools = []
@@ -95,6 +174,9 @@ class AgentEngine:
             )
 
         while self.loop_count < settings.get("agent.max_iterations", 100):
+            ### Check and compress context if needed
+            await self._check_and_compress_context()
+
             context = self.memory_manager.get_llm_context()
 
             if self.agent_definition.system_prompt is not None:

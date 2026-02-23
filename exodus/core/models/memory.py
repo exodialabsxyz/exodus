@@ -101,6 +101,10 @@ class MemoryManager(ABC):
     def load_memory(self, *args: Any, **kwargs: Any) -> None:
         pass
 
+    def replace_memory(self, messages: List[Message]) -> None:
+        """Replaces the current short-term memory with a new list of messages."""
+        self._short_term_memory = messages
+
     def compact_memory(self) -> None:
         self._short_term_memory = self._short_term_memory[-10:]
 

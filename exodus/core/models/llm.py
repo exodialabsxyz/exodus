@@ -11,6 +11,7 @@ class LLMConfig:
     model: str
     provider: str = "litellm"
     max_tokens: Optional[int] = 100000
+    max_context_tokens: Optional[int] = None
     temperature: float = 0.7
     custom_api_base: Optional[str] = None
 
@@ -66,6 +67,11 @@ class LLMProvider(ABC, Generic[T]):
     @abstractmethod
     def rebuild_response(self, chunks: List[Any]) -> LLMProviderResponse[T]:
         """Rebuilds a complete response from a list of stream chunks."""
+        pass
+
+    @abstractmethod
+    def count_tokens(self, messages: List[Dict[str, Any]]) -> int:
+        """Counts the number of tokens in the given messages."""
         pass
 
     @abstractmethod

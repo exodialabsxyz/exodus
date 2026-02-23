@@ -11,4 +11,5 @@ handoffs = ["triage_agent", "exploit_agent", "web_exploit_agent", "privesc_agent
 
 [agent.llm]
 temperature = 0.4
+max_context_tokens = 700000
 
